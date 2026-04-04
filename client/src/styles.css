@@ -1,0 +1,441 @@
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("/fonts/chakra-petch-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Oxanium";
+  src: url("/fonts/oxanium-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Oxanium";
+  src: url("/fonts/oxanium-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg-black: #050308;
+  --bg-panel: rgba(9, 8, 18, 0.9);
+  --bg-panel-strong: rgba(14, 11, 28, 0.96);
+  --bg-chip: rgba(12, 10, 22, 0.82);
+  --edge-primary: rgba(164, 142, 255, 0.62);
+  --edge-muted: rgba(199, 207, 255, 0.26);
+  --text-main: #f5f7ff;
+  --text-soft: #d2d7f3;
+  --text-muted: #b7bfdc;
+  --accent-purple: #8f6dff;
+  --accent-purple-bright: #b29cff;
+  --accent-silver: #cfd7f7;
+  --accent-steel: #7d86ab;
+  color: var(--text-main);
+  background: var(--bg-black);
+  font-family: "Oxanium", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: #040108;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p,
+ul {
+  margin: 0;
+}
+
+.game-shell,
+.game-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.game-host {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(93, 72, 182, 0.18), transparent 34%),
+    radial-gradient(circle at bottom, rgba(36, 27, 84, 0.16), transparent 38%),
+    #040108;
+}
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.screen-overlay,
+.hud-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.screen-overlay {
+  pointer-events: none;
+}
+
+.screen-overlay > * {
+  pointer-events: auto;
+}
+
+.hud-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  pointer-events: none;
+}
+
+.hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hud-pill,
+.hud-prompt,
+.hud-debug,
+.menu-panel {
+  border: 1px solid var(--edge-muted);
+  background: var(--bg-panel);
+  box-shadow:
+    0 0 0 1px rgba(8, 7, 15, 0.85) inset,
+    0 16px 32px rgba(0, 0, 0, 0.34);
+}
+
+.hud-pill {
+  display: grid;
+  gap: 4px;
+  min-width: 108px;
+  padding: 8px 10px;
+}
+
+.hud-pill span,
+.field-label span,
+.menu-kicker {
+  color: var(--accent-purple-bright);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hud-pill strong,
+.hud-prompt {
+  color: var(--text-main);
+}
+
+.hud-prompt,
+.hud-debug {
+  align-self: flex-start;
+  max-width: min(100%, 440px);
+  padding: 10px 12px;
+  line-height: 1.35;
+}
+
+.hud-prompt {
+  border-color: rgba(143, 109, 255, 0.5);
+}
+
+.hud-debug {
+  max-width: min(100%, 660px);
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.menu-screen,
+.title-screen {
+  position: absolute;
+  inset: 0;
+}
+
+.menu-screen {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(4, 1, 8, 0.74), rgba(4, 1, 8, 0.92)),
+    radial-gradient(circle at top, rgba(116, 93, 228, 0.14), transparent 30%);
+}
+
+.menu-panel {
+  display: grid;
+  gap: 16px;
+  width: min(92vw, 520px);
+  padding: 24px;
+}
+
+.menu-panel h2 {
+  font-family: "Chakra Petch", "Oxanium", sans-serif;
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title-screen-splash {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr);
+  grid-template-rows: 1fr auto;
+  align-items: stretch;
+  padding: clamp(18px, 4vw, 38px);
+  background:
+    linear-gradient(180deg, rgba(2, 1, 6, 0.18), rgba(2, 1, 6, 0.7)),
+    radial-gradient(circle at 22% 28%, rgba(13, 10, 25, 0.2), transparent 26%),
+    radial-gradient(circle at 78% 18%, rgba(12, 10, 24, 0.12), transparent 22%),
+    var(--title-splash-image) center center / cover no-repeat,
+    #000;
+}
+
+.title-screen-splash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 3, 8, 0.72) 0%, rgba(5, 3, 8, 0.18) 30%, rgba(5, 3, 8, 0.04) 52%, rgba(5, 3, 8, 0.46) 100%),
+    linear-gradient(180deg, rgba(5, 3, 8, 0.34) 0%, rgba(5, 3, 8, 0.08) 34%, rgba(5, 3, 8, 0.44) 100%);
+  pointer-events: none;
+}
+
+.title-brand-panel,
+.title-actions-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.title-brand-panel {
+  align-self: start;
+  justify-self: start;
+  max-width: min(42vw, 520px);
+  padding: clamp(14px, 2vw, 22px);
+  border: 1px solid rgba(178, 156, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(11, 9, 21, 0.62), rgba(11, 9, 21, 0.2)),
+    rgba(11, 9, 21, 0.24);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.26),
+    0 0 0 1px rgba(7, 6, 14, 0.4) inset;
+}
+
+.title-actions-panel {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  justify-self: end;
+  display: grid;
+  gap: 12px;
+  width: min(34vw, 380px);
+  min-width: min(84vw, 320px);
+  padding: clamp(16px, 2vw, 22px);
+  border: 1px solid rgba(178, 156, 255, 0.34);
+  background:
+    linear-gradient(180deg, rgba(13, 11, 25, 0.92), rgba(10, 8, 19, 0.84)),
+    rgba(10, 8, 19, 0.84);
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(8, 7, 15, 0.72) inset;
+}
+
+.title-logo {
+  display: grid;
+  gap: 2px;
+  font-family: "Chakra Petch", "Oxanium", sans-serif;
+  font-size: clamp(54px, 9vw, 116px);
+  line-height: 0.88;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-silver);
+  text-shadow:
+    0 0 18px rgba(178, 156, 255, 0.2),
+    0 0 0 transparent,
+    6px 6px 0 rgba(78, 58, 162, 0.58);
+}
+
+.title-logo span {
+  display: block;
+}
+
+.title-logo span:nth-child(2) {
+  color: var(--accent-purple-bright);
+}
+
+.title-logo-splash {
+  text-align: left;
+  font-size: clamp(46px, 8vw, 112px);
+}
+
+.status-copy,
+.title-status {
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.title-status {
+  font-size: 12px;
+}
+
+.action-stack,
+.title-actions-stack {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.menu-notice {
+  min-height: 24px;
+}
+
+.title-actions-stack {
+  grid-template-columns: 1fr;
+}
+
+.room-code-display {
+  padding: 16px 18px;
+  border: 1px solid rgba(178, 156, 255, 0.44);
+  background: rgba(17, 14, 33, 0.94);
+  color: var(--accent-silver);
+  font-family: "Chakra Petch", "Oxanium", sans-serif;
+  font-size: clamp(34px, 8vw, 58px);
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+
+.field-label {
+  display: grid;
+  gap: 8px;
+}
+
+.text-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--edge-muted);
+  background: var(--bg-panel-strong);
+  color: var(--text-main);
+}
+
+.room-code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 20px;
+}
+
+.action-button,
+.ghost-button {
+  min-height: 50px;
+  padding: 13px 16px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    filter 120ms ease,
+    opacity 120ms ease;
+  font-family: "Oxanium", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.action-button:hover,
+.ghost-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.action-button {
+  border-color: rgba(178, 156, 255, 0.5);
+  background: linear-gradient(180deg, #9c82ff, #5a3ed1);
+  color: #f6f3ff;
+}
+
+.secondary-button {
+  border-color: rgba(207, 215, 247, 0.4);
+  background: linear-gradient(180deg, #d8def8, #8d96c4);
+  color: #171520;
+}
+
+.ghost-button {
+  border-color: rgba(130, 140, 186, 0.4);
+  background: rgba(14, 12, 28, 0.92);
+  color: var(--text-soft);
+}
+
+.action-button:disabled,
+.ghost-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .hud-overlay {
+    padding: 12px;
+  }
+
+  .hud-pill {
+    min-width: 92px;
+  }
+
+  .menu-panel {
+    width: min(94vw, 440px);
+    padding: 18px;
+  }
+
+  .title-screen-splash {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    padding: 16px;
+    background-position: center top;
+  }
+
+  .title-brand-panel {
+    max-width: min(88vw, 360px);
+    padding: 12px 14px;
+  }
+
+  .title-actions-panel {
+    grid-column: 1;
+    grid-row: 3;
+    width: min(88vw, 340px);
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .title-logo-splash {
+    font-size: clamp(42px, 13vw, 84px);
+  }
+}

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.vite/
+*.log
+*.err
+*.out
+dev-log.txt
+output/
+playwright-report/
+playwright-artifacts/
+client/node_modules/
+client/dist/
+server/node_modules/
+server/dist/
+map-editor/node_modules/
+map-editor/dist/

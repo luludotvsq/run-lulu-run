@@ -1,0 +1,2072 @@
+{
+  "id": "forest",
+  "name": "hollowed grounds",
+  "widthTiles": 64,
+  "heightTiles": 48,
+  "palette": {
+    "floor": 1911852,
+    "floorAlt": 2307637,
+    "floorAccent": 3164487,
+    "wall": 5267823,
+    "rock": 7701130,
+    "car": 8534581,
+    "ledge": 11650777,
+    "pallet": 12815181,
+    "brokenPallet": 7230777,
+    "gateClosed": 6978431,
+    "gateOpen": 4969083,
+    "boundary": 989211
+  },
+  "obstacles": [
+    {
+      "id": "west-yard-top",
+      "kind": "wall",
+      "tileX": 4,
+      "tileY": 4,
+      "tileW": 12,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-left",
+      "kind": "wall",
+      "tileX": 4,
+      "tileY": 4,
+      "tileW": 1,
+      "tileH": 13
+    },
+    {
+      "id": "west-yard-bottom-left",
+      "kind": "wall",
+      "tileX": 4,
+      "tileY": 16,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-bottom-right",
+      "kind": "wall",
+      "tileX": 11,
+      "tileY": 16,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-rock-a",
+      "kind": "rock",
+      "tileX": 7,
+      "tileY": 8,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "west-yard-rock-b",
+      "kind": "rock",
+      "tileX": 10,
+      "tileY": 8,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "west-yard-inner-a",
+      "kind": "rock",
+      "tileX": 6,
+      "tileY": 6,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-inner-b",
+      "kind": "rock",
+      "tileX": 8,
+      "tileY": 6,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-inner-c",
+      "kind": "rock",
+      "tileX": 13,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-inner-d",
+      "kind": "rock",
+      "tileX": 13,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-inner-e",
+      "kind": "rock",
+      "tileX": 6,
+      "tileY": 13,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "west-yard-inner-f",
+      "kind": "rock",
+      "tileX": 10,
+      "tileY": 13,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "warehouse-top-left",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 6,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "warehouse-top-right",
+      "kind": "wall",
+      "tileX": 30,
+      "tileY": 6,
+      "tileW": 8,
+      "tileH": 1
+    },
+    {
+      "id": "warehouse-bottom",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 19,
+      "tileW": 16,
+      "tileH": 1
+    },
+    {
+      "id": "warehouse-pillar",
+      "kind": "rock",
+      "tileX": 29,
+      "tileY": 11,
+      "tileW": 2,
+      "tileH": 4
+    },
+    {
+      "id": "warehouse-yard-rock-a",
+      "kind": "rock",
+      "tileX": 24,
+      "tileY": 8,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "warehouse-yard-rock-b",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 8,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "warehouse-inner-a",
+      "kind": "rock",
+      "tileX": 24,
+      "tileY": 14,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "warehouse-inner-c",
+      "kind": "rock",
+      "tileX": 26,
+      "tileY": 15,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "warehouse-inner-e",
+      "kind": "rock",
+      "tileX": 33,
+      "tileY": 15,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "warehouse-inner-f",
+      "kind": "rock",
+      "tileX": 35,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "crusher-top",
+      "kind": "wall",
+      "tileX": 44,
+      "tileY": 5,
+      "tileW": 13,
+      "tileH": 1
+    },
+    {
+      "id": "crusher-right",
+      "kind": "wall",
+      "tileX": 56,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 14
+    },
+    {
+      "id": "crusher-left-top",
+      "kind": "wall",
+      "tileX": 44,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "crusher-left-bottom",
+      "kind": "wall",
+      "tileX": 44,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 7
+    },
+    {
+      "id": "crusher-rock-a",
+      "kind": "rock",
+      "tileX": 48,
+      "tileY": 9,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "crusher-rock-b",
+      "kind": "rock",
+      "tileX": 51,
+      "tileY": 9,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "crusher-rock-c",
+      "kind": "rock",
+      "tileX": 53,
+      "tileY": 10,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "crusher-inner-a",
+      "kind": "rock",
+      "tileX": 46,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "crusher-inner-b",
+      "kind": "rock",
+      "tileX": 54,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "crusher-inner-c",
+      "kind": "rock",
+      "tileX": 47,
+      "tileY": 13,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "crusher-inner-d",
+      "kind": "rock",
+      "tileX": 52,
+      "tileY": 14,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "crusher-inner-e",
+      "kind": "rock",
+      "tileX": 50,
+      "tileY": 16,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "sw-yard-top",
+      "kind": "wall",
+      "tileX": 9,
+      "tileY": 28,
+      "tileW": 15,
+      "tileH": 1
+    },
+    {
+      "id": "sw-yard-right-top",
+      "kind": "wall",
+      "tileX": 23,
+      "tileY": 28,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "sw-yard-right-bottom",
+      "kind": "wall",
+      "tileX": 23,
+      "tileY": 35,
+      "tileW": 1,
+      "tileH": 6
+    },
+    {
+      "id": "sw-yard-rock",
+      "kind": "rock",
+      "tileX": 14,
+      "tileY": 33,
+      "tileW": 3,
+      "tileH": 3
+    },
+    {
+      "id": "sw-yard-rock-a",
+      "kind": "rock",
+      "tileX": 11,
+      "tileY": 30,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "sw-yard-rock-b",
+      "kind": "rock",
+      "tileX": 19,
+      "tileY": 31,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "sw-yard-inner-a",
+      "kind": "rock",
+      "tileX": 12,
+      "tileY": 37,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "sw-yard-inner-b",
+      "kind": "rock",
+      "tileX": 15,
+      "tileY": 29,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "sw-yard-inner-c",
+      "kind": "rock",
+      "tileX": 18,
+      "tileY": 36,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "sw-yard-inner-d",
+      "kind": "rock",
+      "tileX": 20,
+      "tileY": 33,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "sw-yard-inner-e",
+      "kind": "rock",
+      "tileX": 12,
+      "tileY": 32,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "service-top",
+      "kind": "wall",
+      "tileX": 33,
+      "tileY": 29,
+      "tileW": 17,
+      "tileH": 1
+    },
+    {
+      "id": "service-left",
+      "kind": "wall",
+      "tileX": 33,
+      "tileY": 29,
+      "tileW": 1,
+      "tileH": 13
+    },
+    {
+      "id": "service-right",
+      "kind": "wall",
+      "tileX": 49,
+      "tileY": 29,
+      "tileW": 1,
+      "tileH": 13
+    },
+    {
+      "id": "service-bottom-left",
+      "kind": "wall",
+      "tileX": 33,
+      "tileY": 41,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "service-bottom-right",
+      "kind": "wall",
+      "tileX": 41,
+      "tileY": 41,
+      "tileW": 9,
+      "tileH": 1
+    },
+    {
+      "id": "service-rock-a",
+      "kind": "rock",
+      "tileX": 38,
+      "tileY": 33,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "service-rock-b",
+      "kind": "rock",
+      "tileX": 40,
+      "tileY": 33,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "service-rock-c",
+      "kind": "rock",
+      "tileX": 44,
+      "tileY": 35,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "service-rock-d",
+      "kind": "rock",
+      "tileX": 46,
+      "tileY": 36,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "service-inner-left-top",
+      "kind": "wall",
+      "tileX": 36,
+      "tileY": 30,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "service-inner-left-bottom",
+      "kind": "wall",
+      "tileX": 36,
+      "tileY": 34,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "service-inner-right-left",
+      "kind": "wall",
+      "tileX": 42,
+      "tileY": 38,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "service-inner-right-right",
+      "kind": "wall",
+      "tileX": 45,
+      "tileY": 38,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "service-inner-a",
+      "kind": "rock",
+      "tileX": 35,
+      "tileY": 31,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "service-inner-b",
+      "kind": "rock",
+      "tileX": 35,
+      "tileY": 35,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "service-inner-c",
+      "kind": "rock",
+      "tileX": 38,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "service-inner-d",
+      "kind": "rock",
+      "tileX": 41,
+      "tileY": 31,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "service-inner-e",
+      "kind": "rock",
+      "tileX": 46,
+      "tileY": 31,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "service-inner-f",
+      "kind": "rock",
+      "tileX": 47,
+      "tileY": 35,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "mid-rock",
+      "kind": "rock",
+      "tileX": 18,
+      "tileY": 22,
+      "tileW": 3,
+      "tileH": 3
+    },
+    {
+      "id": "mid-barrier",
+      "kind": "wall",
+      "tileX": 27,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 8
+    },
+    {
+      "id": "east-rock",
+      "kind": "rock",
+      "tileX": 52,
+      "tileY": 28,
+      "tileW": 4,
+      "tileH": 4
+    },
+    {
+      "id": "south-rock-a",
+      "kind": "rock",
+      "tileX": 6,
+      "tileY": 22,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "north-rock",
+      "kind": "rock",
+      "tileX": 18,
+      "tileY": 8,
+      "tileW": 3,
+      "tileH": 2
+    },
+    {
+      "id": "mid-east-rock",
+      "kind": "rock",
+      "tileX": 40,
+      "tileY": 22,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "mid-pocket-a",
+      "kind": "rock",
+      "tileX": 14,
+      "tileY": 20,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "mid-pocket-b",
+      "kind": "rock",
+      "tileX": 31,
+      "tileY": 23,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "mid-pocket-c",
+      "kind": "rock",
+      "tileX": 46,
+      "tileY": 23,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "east-pocket-a",
+      "kind": "rock",
+      "tileX": 57,
+      "tileY": 23,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "east-pocket-b",
+      "kind": "rock",
+      "tileX": 55,
+      "tileY": 34,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "east-pocket-c",
+      "kind": "rock",
+      "tileX": 58,
+      "tileY": 38,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "west-yard-crate-i",
+      "kind": "rock",
+      "tileX": 6,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "west-yard-crate-j",
+      "kind": "rock",
+      "tileX": 12,
+      "tileY": 6,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "warehouse-crate-i",
+      "kind": "rock",
+      "tileX": 25,
+      "tileY": 11,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "warehouse-crate-j",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 15,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-scrap-top-left",
+      "kind": "wall",
+      "tileX": 2,
+      "tileY": 24,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "yard-scrap-top-right",
+      "kind": "wall",
+      "tileX": 6,
+      "tileY": 24,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "yard-scrap-left-top",
+      "kind": "wall",
+      "tileX": 2,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "yard-scrap-left-bottom",
+      "kind": "wall",
+      "tileX": 2,
+      "tileY": 27,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "yard-scrap-right-top",
+      "kind": "wall",
+      "tileX": 8,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "yard-scrap-bottom-left",
+      "kind": "wall",
+      "tileX": 2,
+      "tileY": 29,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "yard-scrap-bottom-mid",
+      "kind": "wall",
+      "tileX": 5,
+      "tileY": 29,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-a",
+      "kind": "rock",
+      "tileX": 4,
+      "tileY": 26,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-b",
+      "kind": "rock",
+      "tileX": 6,
+      "tileY": 27,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-c",
+      "kind": "rock",
+      "tileX": 24,
+      "tileY": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-d",
+      "kind": "rock",
+      "tileX": 26,
+      "tileY": 25,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-e",
+      "kind": "rock",
+      "tileX": 39,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-f",
+      "kind": "rock",
+      "tileX": 43,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-rock-cluster",
+      "kind": "rock",
+      "tileX": 54,
+      "tileY": 23,
+      "tileW": 2,
+      "tileH": 3
+    },
+    {
+      "id": "yard-crate-g",
+      "kind": "rock",
+      "tileX": 31,
+      "tileY": 38,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-h",
+      "kind": "rock",
+      "tileX": 52,
+      "tileY": 35,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-i",
+      "kind": "rock",
+      "tileX": 15,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-j",
+      "kind": "rock",
+      "tileX": 41,
+      "tileY": 33,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "yard-crate-k",
+      "kind": "rock",
+      "tileX": 47,
+      "tileY": 26,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "mid-lane-a",
+      "kind": "rock",
+      "tileX": 17,
+      "tileY": 26,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "mid-lane-b",
+      "kind": "rock",
+      "tileX": 19,
+      "tileY": 26,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "mid-lane-c",
+      "kind": "rock",
+      "tileX": 21,
+      "tileY": 27,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "mid-lane-d",
+      "kind": "rock",
+      "tileX": 35,
+      "tileY": 23,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "mid-lane-e",
+      "kind": "rock",
+      "tileX": 36,
+      "tileY": 26,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "mid-lane-f",
+      "kind": "rock",
+      "tileX": 49,
+      "tileY": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "mid-lane-g",
+      "kind": "rock",
+      "tileX": 51,
+      "tileY": 25,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "north-pocket-a",
+      "kind": "rock",
+      "tileX": 40,
+      "tileY": 11,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "north-pocket-b",
+      "kind": "rock",
+      "tileX": 41,
+      "tileY": 14,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "east-pocket-d",
+      "kind": "rock",
+      "tileX": 57,
+      "tileY": 27,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "east-pocket-e",
+      "kind": "rock",
+      "tileX": 58,
+      "tileY": 30,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-1",
+      "kind": "rock",
+      "tileX": 4,
+      "tileY": 44,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-2",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 37,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-3",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 34,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-4",
+      "kind": "rock",
+      "tileX": 4,
+      "tileY": 34,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-5",
+      "kind": "rock",
+      "tileX": 13,
+      "tileY": 44,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-6",
+      "kind": "rock",
+      "tileX": 17,
+      "tileY": 44,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-7",
+      "kind": "rock",
+      "tileX": 26,
+      "tileY": 44,
+      "tileW": 7,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-8",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 14,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-9",
+      "kind": "rock",
+      "tileX": 1,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-10",
+      "kind": "rock",
+      "tileX": 60,
+      "tileY": 9,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-11",
+      "kind": "rock",
+      "tileX": 58,
+      "tileY": 1,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-12",
+      "kind": "rock",
+      "tileX": 48,
+      "tileY": 3,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-13",
+      "kind": "rock",
+      "tileX": 44,
+      "tileY": 2,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-14",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 2,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-15",
+      "kind": "rock",
+      "tileX": 29,
+      "tileY": 2,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-16",
+      "kind": "rock",
+      "tileX": 24,
+      "tileY": 3,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-17",
+      "kind": "rock",
+      "tileX": 18,
+      "tileY": 1,
+      "tileW": 2,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-18",
+      "kind": "rock",
+      "tileX": 61,
+      "tileY": 33,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-19",
+      "kind": "rock",
+      "tileX": 59,
+      "tileY": 42,
+      "tileW": 3,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-20",
+      "kind": "rock",
+      "tileX": 53,
+      "tileY": 42,
+      "tileW": 5,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-21",
+      "kind": "rock",
+      "tileX": 43,
+      "tileY": 45,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-22",
+      "kind": "rock",
+      "tileX": 51,
+      "tileY": 43,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-23",
+      "kind": "rock",
+      "tileX": 49,
+      "tileY": 46,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-24",
+      "kind": "rock",
+      "tileX": 27,
+      "tileY": 40,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-25",
+      "kind": "rock",
+      "tileX": 30,
+      "tileY": 32,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-26",
+      "kind": "rock",
+      "tileX": 29,
+      "tileY": 29,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-27",
+      "kind": "rock",
+      "tileX": 60,
+      "tileY": 20,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-28",
+      "kind": "rock",
+      "tileX": 61,
+      "tileY": 15,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-29",
+      "kind": "rock",
+      "tileX": 51,
+      "tileY": 21,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-30",
+      "kind": "wall",
+      "tileX": 10,
+      "tileY": 40,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-31",
+      "kind": "wall",
+      "tileX": 14,
+      "tileY": 40,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-32",
+      "kind": "wall",
+      "tileX": 20,
+      "tileY": 40,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-33",
+      "kind": "wall",
+      "tileX": 8,
+      "tileY": 39,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-34",
+      "kind": "wall",
+      "tileX": 8,
+      "tileY": 35,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-35",
+      "kind": "wall",
+      "tileX": 8,
+      "tileY": 28,
+      "tileW": 1,
+      "tileH": 6
+    },
+    {
+      "id": "obstacle-36",
+      "kind": "wall",
+      "tileX": 15,
+      "tileY": 6,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-37",
+      "kind": "wall",
+      "tileX": 15,
+      "tileY": 11,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-38",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 8,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-39",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-40",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 16,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-41",
+      "kind": "wall",
+      "tileX": 37,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-42",
+      "kind": "wall",
+      "tileX": 37,
+      "tileY": 11,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-43",
+      "kind": "wall",
+      "tileX": 37,
+      "tileY": 14,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "obstacle-44",
+      "kind": "wall",
+      "tileX": 45,
+      "tileY": 18,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-45",
+      "kind": "wall",
+      "tileX": 48,
+      "tileY": 18,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-46",
+      "kind": "wall",
+      "tileX": 51,
+      "tileY": 18,
+      "tileW": 4,
+      "tileH": 1
+    }
+  ],
+  "ledges": [
+    {
+      "id": "west-yard-south-ledge",
+      "orientation": "horizontal",
+      "tileX": 9,
+      "tileY": 16,
+      "spanTiles": 2
+    },
+    {
+      "id": "warehouse-north-ledge",
+      "orientation": "horizontal",
+      "tileX": 28,
+      "tileY": 6,
+      "spanTiles": 2
+    },
+    {
+      "id": "crusher-west-ledge",
+      "orientation": "vertical",
+      "tileX": 44,
+      "tileY": 10,
+      "spanTiles": 2
+    },
+    {
+      "id": "sw-yard-east-ledge",
+      "orientation": "vertical",
+      "tileX": 23,
+      "tileY": 33,
+      "spanTiles": 2
+    },
+    {
+      "id": "service-south-ledge",
+      "orientation": "horizontal",
+      "tileX": 39,
+      "tileY": 41,
+      "spanTiles": 2
+    },
+    {
+      "id": "service-inner-left-ledge",
+      "orientation": "vertical",
+      "tileX": 36,
+      "tileY": 33,
+      "spanTiles": 1
+    },
+    {
+      "id": "service-inner-right-ledge",
+      "orientation": "horizontal",
+      "tileX": 44,
+      "tileY": 38,
+      "spanTiles": 1
+    },
+    {
+      "id": "yard-scrap-top-ledge",
+      "orientation": "horizontal",
+      "tileX": 5,
+      "tileY": 24,
+      "spanTiles": 1
+    },
+    {
+      "id": "yard-scrap-left-ledge",
+      "orientation": "vertical",
+      "tileX": 2,
+      "tileY": 26,
+      "spanTiles": 1
+    },
+    {
+      "id": "yard-scrap-right-ledge",
+      "orientation": "vertical",
+      "tileX": 8,
+      "tileY": 27,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-1",
+      "orientation": "horizontal",
+      "tileX": 33,
+      "tileY": 24,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-2",
+      "orientation": "horizontal",
+      "tileX": 6,
+      "tileY": 29,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-3",
+      "orientation": "horizontal",
+      "tileX": 9,
+      "tileY": 40,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-4",
+      "orientation": "horizontal",
+      "tileX": 13,
+      "tileY": 40,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-5",
+      "orientation": "horizontal",
+      "tileX": 19,
+      "tileY": 40,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-6",
+      "orientation": "horizontal",
+      "tileX": 16,
+      "tileY": 44,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-7",
+      "orientation": "horizontal",
+      "tileX": 58,
+      "tileY": 43,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-8",
+      "orientation": "horizontal",
+      "tileX": 52,
+      "tileY": 43,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-9",
+      "orientation": "horizontal",
+      "tileX": 53,
+      "tileY": 35,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-10",
+      "orientation": "horizontal",
+      "tileX": 56,
+      "tileY": 24,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-11",
+      "orientation": "horizontal",
+      "tileX": 37,
+      "tileY": 24,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-12",
+      "orientation": "horizontal",
+      "tileX": 28,
+      "tileY": 29,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-13",
+      "orientation": "horizontal",
+      "tileX": 50,
+      "tileY": 18,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-14",
+      "orientation": "horizontal",
+      "tileX": 47,
+      "tileY": 18,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-15",
+      "orientation": "horizontal",
+      "tileX": 55,
+      "tileY": 18,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-16",
+      "orientation": "vertical",
+      "tileX": 15,
+      "tileY": 5,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-17",
+      "orientation": "vertical",
+      "tileX": 15,
+      "tileY": 8,
+      "spanTiles": 3
+    },
+    {
+      "id": "ledge-18",
+      "orientation": "vertical",
+      "tileX": 15,
+      "tileY": 15,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-19",
+      "orientation": "vertical",
+      "tileX": 8,
+      "tileY": 34,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-20",
+      "orientation": "vertical",
+      "tileX": 8,
+      "tileY": 38,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-21",
+      "orientation": "vertical",
+      "tileX": 22,
+      "tileY": 11,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-22",
+      "orientation": "vertical",
+      "tileX": 22,
+      "tileY": 7,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-23",
+      "orientation": "vertical",
+      "tileX": 22,
+      "tileY": 15,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-24",
+      "orientation": "vertical",
+      "tileX": 22,
+      "tileY": 17,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-25",
+      "orientation": "vertical",
+      "tileX": 37,
+      "tileY": 10,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-26",
+      "orientation": "vertical",
+      "tileX": 59,
+      "tileY": 40,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-27",
+      "orientation": "vertical",
+      "tileX": 57,
+      "tileY": 25,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-28",
+      "orientation": "vertical",
+      "tileX": 36,
+      "tileY": 25,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-29",
+      "orientation": "vertical",
+      "tileX": 19,
+      "tileY": 25,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-30",
+      "orientation": "vertical",
+      "tileX": 15,
+      "tileY": 22,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-31",
+      "orientation": "vertical",
+      "tileX": 35,
+      "tileY": 10,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-32",
+      "orientation": "vertical",
+      "tileX": 54,
+      "tileY": 8,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-33",
+      "orientation": "vertical",
+      "tileX": 53,
+      "tileY": 12,
+      "spanTiles": 2
+    }
+  ],
+  "pallets": [
+    {
+      "id": "pallet-1",
+      "tileX": 6,
+      "tileY": 45,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-2",
+      "tileX": 21,
+      "tileY": 44,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-3",
+      "tileX": 33,
+      "tileY": 45,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-4",
+      "tileX": 12,
+      "tileY": 44,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-5",
+      "tileX": 26,
+      "tileY": 43,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-6",
+      "tileX": 27,
+      "tileY": 39,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-7",
+      "tileX": 31,
+      "tileY": 39,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-8",
+      "tileX": 31,
+      "tileY": 32,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-9",
+      "tileX": 30,
+      "tileY": 29,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-10",
+      "tileX": 25,
+      "tileY": 25,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-11",
+      "tileX": 18,
+      "tileY": 26,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-12",
+      "tileX": 20,
+      "tileY": 21,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-13",
+      "tileX": 15,
+      "tileY": 19,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-14",
+      "tileX": 13,
+      "tileY": 21,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-15",
+      "tileX": 1,
+      "tileY": 14,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-16",
+      "tileX": 2,
+      "tileY": 5,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-17",
+      "tileX": 27,
+      "tileY": 16,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-18",
+      "tileX": 33,
+      "tileY": 9,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-19",
+      "tileX": 33,
+      "tileY": 17,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-20",
+      "tileX": 35,
+      "tileY": 13,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-21",
+      "tileX": 25,
+      "tileY": 10,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-22",
+      "tileX": 24,
+      "tileY": 13,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-23",
+      "tileX": 46,
+      "tileY": 6,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-24",
+      "tileX": 50,
+      "tileY": 15,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-25",
+      "tileX": 47,
+      "tileY": 22,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-26",
+      "tileX": 51,
+      "tileY": 24,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-27",
+      "tileX": 60,
+      "tileY": 19,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-28",
+      "tileX": 61,
+      "tileY": 14,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-29",
+      "tileX": 60,
+      "tileY": 10,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-30",
+      "tileX": 48,
+      "tileY": 2,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-31",
+      "tileX": 34,
+      "tileY": 3,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-32",
+      "tileX": 35,
+      "tileY": 22,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-33",
+      "tileX": 37,
+      "tileY": 28,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-34",
+      "tileX": 57,
+      "tileY": 40,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-35",
+      "tileX": 53,
+      "tileY": 44,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-36",
+      "tileX": 62,
+      "tileY": 44,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-37",
+      "tileX": 61,
+      "tileY": 32,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-38",
+      "tileX": 58,
+      "tileY": 29,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-39",
+      "tileX": 58,
+      "tileY": 22,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-40",
+      "tileX": 44,
+      "tileY": 44,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-41",
+      "tileX": 49,
+      "tileY": 47,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-42",
+      "tileX": 14,
+      "tileY": 7,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-43",
+      "tileX": 9,
+      "tileY": 9,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-44",
+      "tileX": 7,
+      "tileY": 6,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-45",
+      "tileX": 4,
+      "tileY": 29,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-46",
+      "tileX": 3,
+      "tileY": 34,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-47",
+      "tileX": 11,
+      "tileY": 37,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-48",
+      "tileX": 20,
+      "tileY": 37,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-49",
+      "tileX": 21,
+      "tileY": 31,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-50",
+      "tileX": 10,
+      "tileY": 30,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-51",
+      "tileX": 3,
+      "tileY": 44,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-52",
+      "tileX": 28,
+      "tileY": 40,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-53",
+      "tileX": 41,
+      "tileY": 38,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-54",
+      "tileX": 48,
+      "tileY": 35,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-55",
+      "tileX": 40,
+      "tileY": 31,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-56",
+      "tileX": 46,
+      "tileY": 26,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-57",
+      "tileX": 50,
+      "tileY": 21,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-58",
+      "tileX": 42,
+      "tileY": 11,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-59",
+      "tileX": 45,
+      "tileY": 2,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-60",
+      "tileX": 28,
+      "tileY": 2,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-61",
+      "tileX": 20,
+      "tileY": 1,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-62",
+      "tileX": 17,
+      "tileY": 9,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-63",
+      "tileX": 57,
+      "tileY": 1,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-64",
+      "tileX": 56,
+      "tileY": 27,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-65",
+      "tileX": 51,
+      "tileY": 35,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-66",
+      "tileX": 57,
+      "tileY": 34,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-67",
+      "tileX": 60,
+      "tileY": 39,
+      "orientation": "horizontal"
+    }
+  ],
+  "generatorSpawns": [
+    {
+      "x": 6,
+      "y": 9
+    },
+    {
+      "x": 12,
+      "y": 21
+    },
+    {
+      "x": 20,
+      "y": 12
+    },
+    {
+      "x": 29,
+      "y": 24
+    },
+    {
+      "x": 31,
+      "y": 10
+    },
+    {
+      "x": 34,
+      "y": 36
+    },
+    {
+      "x": 41,
+      "y": 25
+    },
+    {
+      "x": 46,
+      "y": 10
+    },
+    {
+      "x": 54,
+      "y": 16
+    },
+    {
+      "x": 58,
+      "y": 36
+    },
+    {
+      "x": 3,
+      "y": 35
+    },
+    {
+      "x": 14,
+      "y": 36
+    },
+    {
+      "x": 3,
+      "y": 18
+    },
+    {
+      "x": 41,
+      "y": 2
+    },
+    {
+      "x": 7,
+      "y": 44
+    }
+  ],
+  "gate": {
+    "side": "right",
+    "tileX": 63,
+    "tileY": 22
+  },
+  "spawns": {
+    "lulu": {
+      "x": 10,
+      "y": 32
+    },
+    "springtrap": {
+      "x": 29,
+      "y": 36
+    },
+    "npcs": [
+      {
+        "x": 12,
+        "y": 9
+      },
+      {
+        "x": 26,
+        "y": 34
+      },
+      {
+        "x": 47,
+        "y": 12
+      },
+      {
+        "x": 55,
+        "y": 39
+      }
+    ]
+  }
+}

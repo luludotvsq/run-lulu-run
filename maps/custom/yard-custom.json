@@ -1,0 +1,2043 @@
+{
+  "id": "yard-custom",
+  "name": "scrapyard",
+  "widthTiles": 64,
+  "heightTiles": 48,
+  "palette": {
+    "floor": 1911852,
+    "floorAlt": 2307637,
+    "floorAccent": 3164487,
+    "wall": 5267823,
+    "rock": 7701130,
+    "car": 8534581,
+    "ledge": 11650777,
+    "pallet": 12815181,
+    "brokenPallet": 7230777,
+    "gateClosed": 6978431,
+    "gateOpen": 4969083,
+    "boundary": 989211
+  },
+  "obstacles": [
+    {
+      "id": "obstacle-1",
+      "kind": "wall",
+      "tileX": 0,
+      "tileY": 28,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-2",
+      "kind": "wall",
+      "tileX": 4,
+      "tileY": 28,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-3",
+      "kind": "wall",
+      "tileX": 9,
+      "tileY": 28,
+      "tileW": 7,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-4",
+      "kind": "wall",
+      "tileX": 18,
+      "tileY": 28,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-5",
+      "kind": "wall",
+      "tileX": 24,
+      "tileY": 28,
+      "tileW": 8,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-6",
+      "kind": "wall",
+      "tileX": 31,
+      "tileY": 30,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "obstacle-7",
+      "kind": "wall",
+      "tileX": 31,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 7
+    },
+    {
+      "id": "obstacle-8",
+      "kind": "wall",
+      "tileX": 31,
+      "tileY": 44,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-9",
+      "kind": "wall",
+      "tileX": 7,
+      "tileY": 0,
+      "tileW": 1,
+      "tileH": 8
+    },
+    {
+      "id": "obstacle-10",
+      "kind": "wall",
+      "tileX": 7,
+      "tileY": 9,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-11",
+      "kind": "wall",
+      "tileX": 7,
+      "tileY": 10,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-12",
+      "kind": "wall",
+      "tileX": 7,
+      "tileY": 16,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-13",
+      "kind": "wall",
+      "tileX": 9,
+      "tileY": 19,
+      "tileW": 8,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-14",
+      "kind": "wall",
+      "tileX": 20,
+      "tileY": 19,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-15",
+      "kind": "wall",
+      "tileX": 26,
+      "tileY": 19,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-16",
+      "kind": "wall",
+      "tileX": 32,
+      "tileY": 19,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-18",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 19,
+      "tileW": 7,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-19",
+      "kind": "wall",
+      "tileX": 58,
+      "tileY": 19,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-20",
+      "kind": "wall",
+      "tileX": 39,
+      "tileY": 25,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-21",
+      "kind": "wall",
+      "tileX": 46,
+      "tileY": 25,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-22",
+      "kind": "wall",
+      "tileX": 52,
+      "tileY": 25,
+      "tileW": 1,
+      "tileH": 6
+    },
+    {
+      "id": "obstacle-23",
+      "kind": "wall",
+      "tileX": 52,
+      "tileY": 32,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-24",
+      "kind": "wall",
+      "tileX": 52,
+      "tileY": 35,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-25",
+      "kind": "wall",
+      "tileX": 52,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-26",
+      "kind": "wall",
+      "tileX": 45,
+      "tileY": 36,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-27",
+      "kind": "wall",
+      "tileX": 43,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-28",
+      "kind": "wall",
+      "tileX": 39,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-29",
+      "kind": "wall",
+      "tileX": 39,
+      "tileY": 28,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-30",
+      "kind": "wall",
+      "tileX": 39,
+      "tileY": 34,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-31",
+      "kind": "wall",
+      "tileX": 48,
+      "tileY": 39,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-32",
+      "kind": "wall",
+      "tileX": 48,
+      "tileY": 41,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-33",
+      "kind": "wall",
+      "tileX": 48,
+      "tileY": 43,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-34",
+      "kind": "wall",
+      "tileX": 48,
+      "tileY": 45,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-35",
+      "kind": "wall",
+      "tileX": 51,
+      "tileY": 45,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-36",
+      "kind": "wall",
+      "tileX": 52,
+      "tileY": 45,
+      "tileW": 7,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-37",
+      "kind": "wall",
+      "tileX": 60,
+      "tileY": 42,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-38",
+      "kind": "wall",
+      "tileX": 60,
+      "tileY": 40,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-39",
+      "kind": "wall",
+      "tileX": 56,
+      "tileY": 39,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-40",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 39,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-17",
+      "kind": "wall",
+      "tileX": 36,
+      "tileY": 13,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "obstacle-41",
+      "kind": "wall",
+      "tileX": 36,
+      "tileY": 6,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "obstacle-42",
+      "kind": "wall",
+      "tileX": 36,
+      "tileY": 0,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "obstacle-43",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 17,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-44",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 9,
+      "tileW": 1,
+      "tileH": 6
+    },
+    {
+      "id": "obstacle-45",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 6,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-46",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 4,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-47",
+      "kind": "wall",
+      "tileX": 50,
+      "tileY": 0,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-48",
+      "kind": "wall",
+      "tileX": 0,
+      "tileY": 37,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-49",
+      "kind": "wall",
+      "tileX": 8,
+      "tileY": 37,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-50",
+      "kind": "wall",
+      "tileX": 12,
+      "tileY": 39,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-51",
+      "kind": "wall",
+      "tileX": 12,
+      "tileY": 40,
+      "tileW": 1,
+      "tileH": 5
+    },
+    {
+      "id": "obstacle-52",
+      "kind": "wall",
+      "tileX": 12,
+      "tileY": 46,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-53",
+      "kind": "wall",
+      "tileX": 14,
+      "tileY": 0,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-54",
+      "kind": "wall",
+      "tileX": 14,
+      "tileY": 3,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-55",
+      "kind": "wall",
+      "tileX": 14,
+      "tileY": 4,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-56",
+      "kind": "wall",
+      "tileX": 16,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-57",
+      "kind": "wall",
+      "tileX": 15,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-58",
+      "kind": "wall",
+      "tileX": 20,
+      "tileY": 7,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-59",
+      "kind": "wall",
+      "tileX": 23,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-60",
+      "kind": "wall",
+      "tileX": 23,
+      "tileY": 0,
+      "tileW": 1,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-61",
+      "kind": "rock",
+      "tileX": 5,
+      "tileY": 41,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-62",
+      "kind": "rock",
+      "tileX": 9,
+      "tileY": 40,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-63",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 40,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-64",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 41,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-65",
+      "kind": "rock",
+      "tileX": 3,
+      "tileY": 45,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-66",
+      "kind": "rock",
+      "tileX": 3,
+      "tileY": 46,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-67",
+      "kind": "rock",
+      "tileX": 9,
+      "tileY": 42,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-68",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 38,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-69",
+      "kind": "rock",
+      "tileX": 3,
+      "tileY": 31,
+      "tileW": 3,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-70",
+      "kind": "rock",
+      "tileX": 7,
+      "tileY": 31,
+      "tileW": 3,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-71",
+      "kind": "wall",
+      "tileX": 18,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-72",
+      "kind": "wall",
+      "tileX": 18,
+      "tileY": 39,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-73",
+      "kind": "wall",
+      "tileX": 18,
+      "tileY": 42,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-74",
+      "kind": "wall",
+      "tileX": 18,
+      "tileY": 44,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-75",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 41,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-76",
+      "kind": "wall",
+      "tileX": 22,
+      "tileY": 42,
+      "tileW": 6,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-77",
+      "kind": "rock",
+      "tileX": 23,
+      "tileY": 46,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-78",
+      "kind": "rock",
+      "tileX": 25,
+      "tileY": 46,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-79",
+      "kind": "rock",
+      "tileX": 16,
+      "tileY": 45,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-80",
+      "kind": "rock",
+      "tileX": 14,
+      "tileY": 32,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-81",
+      "kind": "rock",
+      "tileX": 25,
+      "tileY": 32,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-82",
+      "kind": "rock",
+      "tileX": 25,
+      "tileY": 34,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-83",
+      "kind": "rock",
+      "tileX": 23,
+      "tileY": 37,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-84",
+      "kind": "rock",
+      "tileX": 26,
+      "tileY": 37,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-85",
+      "kind": "rock",
+      "tileX": 22,
+      "tileY": 37,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-86",
+      "kind": "rock",
+      "tileX": 20,
+      "tileY": 31,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-87",
+      "kind": "rock",
+      "tileX": 3,
+      "tileY": 22,
+      "tileW": 6,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-88",
+      "kind": "rock",
+      "tileX": 15,
+      "tileY": 24,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-89",
+      "kind": "rock",
+      "tileX": 20,
+      "tileY": 24,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-90",
+      "kind": "rock",
+      "tileX": 24,
+      "tileY": 24,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-91",
+      "kind": "rock",
+      "tileX": 4,
+      "tileY": 17,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-92",
+      "kind": "rock",
+      "tileX": 1,
+      "tileY": 16,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-93",
+      "kind": "rock",
+      "tileX": 5,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-94",
+      "kind": "rock",
+      "tileX": 3,
+      "tileY": 8,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-95",
+      "kind": "rock",
+      "tileX": 3,
+      "tileY": 12,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-96",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 2,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-97",
+      "kind": "rock",
+      "tileX": 2,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-98",
+      "kind": "rock",
+      "tileX": 5,
+      "tileY": 4,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-99",
+      "kind": "rock",
+      "tileX": 42,
+      "tileY": 4,
+      "tileW": 2,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-100",
+      "kind": "rock",
+      "tileX": 42,
+      "tileY": 8,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-101",
+      "kind": "rock",
+      "tileX": 42,
+      "tileY": 11,
+      "tileW": 2,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-102",
+      "kind": "rock",
+      "tileX": 47,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 6
+    },
+    {
+      "id": "obstacle-103",
+      "kind": "rock",
+      "tileX": 39,
+      "tileY": 2,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-104",
+      "kind": "rock",
+      "tileX": 47,
+      "tileY": 2,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-105",
+      "kind": "rock",
+      "tileX": 40,
+      "tileY": 18,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-106",
+      "kind": "rock",
+      "tileX": 29,
+      "tileY": 3,
+      "tileW": 2,
+      "tileH": 7
+    },
+    {
+      "id": "obstacle-107",
+      "kind": "rock",
+      "tileX": 10,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-108",
+      "kind": "rock",
+      "tileX": 18,
+      "tileY": 13,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-109",
+      "kind": "rock",
+      "tileX": 12,
+      "tileY": 15,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-110",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 22,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-111",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 26,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-112",
+      "kind": "rock",
+      "tileX": 42,
+      "tileY": 21,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-113",
+      "kind": "rock",
+      "tileX": 45,
+      "tileY": 21,
+      "tileW": 3,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-114",
+      "kind": "rock",
+      "tileX": 56,
+      "tileY": 23,
+      "tileW": 2,
+      "tileH": 4
+    },
+    {
+      "id": "obstacle-115",
+      "kind": "rock",
+      "tileX": 56,
+      "tileY": 28,
+      "tileW": 2,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-116",
+      "kind": "rock",
+      "tileX": 56,
+      "tileY": 34,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-117",
+      "kind": "rock",
+      "tileX": 60,
+      "tileY": 34,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-118",
+      "kind": "rock",
+      "tileX": 35,
+      "tileY": 40,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-119",
+      "kind": "rock",
+      "tileX": 39,
+      "tileY": 40,
+      "tileW": 4,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-120",
+      "kind": "rock",
+      "tileX": 36,
+      "tileY": 44,
+      "tileW": 8,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-121",
+      "kind": "rock",
+      "tileX": 29,
+      "tileY": 13,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-122",
+      "kind": "rock",
+      "tileX": 26,
+      "tileY": 15,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-123",
+      "kind": "rock",
+      "tileX": 33,
+      "tileY": 14,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-124",
+      "kind": "rock",
+      "tileX": 60,
+      "tileY": 14,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-125",
+      "kind": "rock",
+      "tileX": 55,
+      "tileY": 8,
+      "tileW": 3,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-126",
+      "kind": "rock",
+      "tileX": 59,
+      "tileY": 8,
+      "tileW": 5,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-127",
+      "kind": "rock",
+      "tileX": 60,
+      "tileY": 7,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-128",
+      "kind": "rock",
+      "tileX": 60,
+      "tileY": 5,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-129",
+      "kind": "rock",
+      "tileX": 55,
+      "tileY": 1,
+      "tileW": 7,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-130",
+      "kind": "rock",
+      "tileX": 62,
+      "tileY": 29,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-131",
+      "kind": "rock",
+      "tileX": 36,
+      "tileY": 33,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-132",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 31,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-133",
+      "kind": "rock",
+      "tileX": 62,
+      "tileY": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-134",
+      "kind": "rock",
+      "tileX": 54,
+      "tileY": 16,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-135",
+      "kind": "rock",
+      "tileX": 54,
+      "tileY": 14,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-136",
+      "kind": "rock",
+      "tileX": 57,
+      "tileY": 10,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-137",
+      "kind": "rock",
+      "tileX": 34,
+      "tileY": 36,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-138",
+      "kind": "rock",
+      "tileX": 18,
+      "tileY": 3,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-139",
+      "kind": "rock",
+      "tileX": 10,
+      "tileY": 10,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-140",
+      "kind": "rock",
+      "tileX": 13,
+      "tileY": 10,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-141",
+      "kind": "rock",
+      "tileX": 51,
+      "tileY": 42,
+      "tileW": 2,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-142",
+      "kind": "rock",
+      "tileX": 57,
+      "tileY": 43,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "id": "obstacle-143",
+      "kind": "rock",
+      "tileX": 49,
+      "tileY": 28,
+      "tileW": 1,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-144",
+      "kind": "rock",
+      "tileX": 49,
+      "tileY": 31,
+      "tileW": 1,
+      "tileH": 3
+    },
+    {
+      "id": "obstacle-145",
+      "kind": "rock",
+      "tileX": 42,
+      "tileY": 31,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-146",
+      "kind": "rock",
+      "tileX": 29,
+      "tileY": 22,
+      "tileW": 2,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-147",
+      "kind": "rock",
+      "tileX": 21,
+      "tileY": 15,
+      "tileW": 3,
+      "tileH": 2
+    },
+    {
+      "id": "obstacle-148",
+      "kind": "rock",
+      "tileX": 21,
+      "tileY": 10,
+      "tileW": 2,
+      "tileH": 2
+    }
+  ],
+  "ledges": [
+    {
+      "id": "ledge-1",
+      "orientation": "horizontal",
+      "tileX": 3,
+      "tileY": 28,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-2",
+      "orientation": "horizontal",
+      "tileX": 8,
+      "tileY": 28,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-3",
+      "orientation": "horizontal",
+      "tileX": 16,
+      "tileY": 28,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-4",
+      "orientation": "horizontal",
+      "tileX": 17,
+      "tileY": 28,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-5",
+      "orientation": "horizontal",
+      "tileX": 22,
+      "tileY": 28,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-6",
+      "orientation": "horizontal",
+      "tileX": 44,
+      "tileY": 25,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-7",
+      "orientation": "horizontal",
+      "tileX": 51,
+      "tileY": 25,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-8",
+      "orientation": "horizontal",
+      "tileX": 40,
+      "tileY": 36,
+      "spanTiles": 3
+    },
+    {
+      "id": "ledge-9",
+      "orientation": "horizontal",
+      "tileX": 44,
+      "tileY": 36,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-10",
+      "orientation": "horizontal",
+      "tileX": 51,
+      "tileY": 36,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-11",
+      "orientation": "horizontal",
+      "tileX": 49,
+      "tileY": 39,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-12",
+      "orientation": "horizontal",
+      "tileX": 54,
+      "tileY": 39,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-13",
+      "orientation": "horizontal",
+      "tileX": 49,
+      "tileY": 45,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-14",
+      "orientation": "horizontal",
+      "tileX": 59,
+      "tileY": 45,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-15",
+      "orientation": "horizontal",
+      "tileX": 57,
+      "tileY": 19,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-16",
+      "orientation": "horizontal",
+      "tileX": 29,
+      "tileY": 19,
+      "spanTiles": 3
+    },
+    {
+      "id": "ledge-17",
+      "orientation": "horizontal",
+      "tileX": 25,
+      "tileY": 19,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-18",
+      "orientation": "horizontal",
+      "tileX": 18,
+      "tileY": 19,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-19",
+      "orientation": "horizontal",
+      "tileX": 17,
+      "tileY": 19,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-20",
+      "orientation": "horizontal",
+      "tileX": 8,
+      "tileY": 19,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-21",
+      "orientation": "vertical",
+      "tileX": 7,
+      "tileY": 8,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-22",
+      "orientation": "vertical",
+      "tileX": 7,
+      "tileY": 14,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-23",
+      "orientation": "vertical",
+      "tileX": 36,
+      "tileY": 5,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-24",
+      "orientation": "vertical",
+      "tileX": 36,
+      "tileY": 11,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-25",
+      "orientation": "vertical",
+      "tileX": 36,
+      "tileY": 18,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-26",
+      "orientation": "vertical",
+      "tileX": 50,
+      "tileY": 15,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-27",
+      "orientation": "vertical",
+      "tileX": 50,
+      "tileY": 18,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-28",
+      "orientation": "vertical",
+      "tileX": 50,
+      "tileY": 7,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-29",
+      "orientation": "vertical",
+      "tileX": 50,
+      "tileY": 2,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-30",
+      "orientation": "vertical",
+      "tileX": 52,
+      "tileY": 31,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-31",
+      "orientation": "vertical",
+      "tileX": 52,
+      "tileY": 33,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-32",
+      "orientation": "vertical",
+      "tileX": 39,
+      "tileY": 32,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-33",
+      "orientation": "vertical",
+      "tileX": 39,
+      "tileY": 35,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-34",
+      "orientation": "vertical",
+      "tileX": 39,
+      "tileY": 26,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-35",
+      "orientation": "vertical",
+      "tileX": 31,
+      "tileY": 29,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-36",
+      "orientation": "vertical",
+      "tileX": 31,
+      "tileY": 35,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-37",
+      "orientation": "vertical",
+      "tileX": 31,
+      "tileY": 43,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-38",
+      "orientation": "vertical",
+      "tileX": 48,
+      "tileY": 40,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-39",
+      "orientation": "vertical",
+      "tileX": 48,
+      "tileY": 42,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-40",
+      "orientation": "vertical",
+      "tileX": 48,
+      "tileY": 44,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-41",
+      "orientation": "vertical",
+      "tileX": 60,
+      "tileY": 41,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-42",
+      "orientation": "vertical",
+      "tileX": 14,
+      "tileY": 1,
+      "spanTiles": 2
+    },
+    {
+      "id": "ledge-43",
+      "orientation": "vertical",
+      "tileX": 23,
+      "tileY": 4,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-44",
+      "orientation": "vertical",
+      "tileX": 12,
+      "tileY": 38,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-45",
+      "orientation": "vertical",
+      "tileX": 12,
+      "tileY": 45,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-46",
+      "orientation": "vertical",
+      "tileX": 18,
+      "tileY": 38,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-47",
+      "orientation": "vertical",
+      "tileX": 34,
+      "tileY": 25,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-48",
+      "orientation": "vertical",
+      "tileX": 43,
+      "tileY": 10,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-49",
+      "orientation": "vertical",
+      "tileX": 42,
+      "tileY": 7,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-50",
+      "orientation": "vertical",
+      "tileX": 60,
+      "tileY": 6,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-51",
+      "orientation": "vertical",
+      "tileX": 56,
+      "tileY": 27,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-52",
+      "orientation": "horizontal",
+      "tileX": 38,
+      "tileY": 40,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-53",
+      "orientation": "horizontal",
+      "tileX": 59,
+      "tileY": 34,
+      "spanTiles": 1
+    },
+    {
+      "id": "ledge-54",
+      "orientation": "horizontal",
+      "tileX": 12,
+      "tileY": 10,
+      "spanTiles": 1
+    }
+  ],
+  "pallets": [
+    {
+      "id": "pallet-1",
+      "tileX": 24,
+      "tileY": 46,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-2",
+      "tileX": 25,
+      "tileY": 37,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-3",
+      "tileX": 4,
+      "tileY": 12,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-4",
+      "tileX": 58,
+      "tileY": 8,
+      "orientation": "horizontal"
+    },
+    {
+      "id": "pallet-5",
+      "tileX": 2,
+      "tileY": 39,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-6",
+      "tileX": 9,
+      "tileY": 41,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-7",
+      "tileX": 18,
+      "tileY": 43,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-8",
+      "tileX": 18,
+      "tileY": 41,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-9",
+      "tileX": 25,
+      "tileY": 33,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-10",
+      "tileX": 54,
+      "tileY": 15,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-11",
+      "tileX": 2,
+      "tileY": 4,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-12",
+      "tileX": 4,
+      "tileY": 18,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-13",
+      "tileX": 20,
+      "tileY": 25,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-14",
+      "tileX": 4,
+      "tileY": 24,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-15",
+      "tileX": 2,
+      "tileY": 42,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-16",
+      "tileX": 16,
+      "tileY": 46,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-17",
+      "tileX": 14,
+      "tileY": 34,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-18",
+      "tileX": 20,
+      "tileY": 30,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-19",
+      "tileX": 40,
+      "tileY": 19,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-20",
+      "tileX": 34,
+      "tileY": 28,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-21",
+      "tileX": 34,
+      "tileY": 32,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-22",
+      "tileX": 36,
+      "tileY": 34,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-23",
+      "tileX": 34,
+      "tileY": 37,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-24",
+      "tileX": 42,
+      "tileY": 41,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-25",
+      "tileX": 36,
+      "tileY": 46,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-26",
+      "tileX": 43,
+      "tileY": 46,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-27",
+      "tileX": 62,
+      "tileY": 30,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-28",
+      "tileX": 61,
+      "tileY": 35,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-29",
+      "tileX": 56,
+      "tileY": 31,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-30",
+      "tileX": 57,
+      "tileY": 22,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-31",
+      "tileX": 62,
+      "tileY": 22,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-32",
+      "tileX": 60,
+      "tileY": 15,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-33",
+      "tileX": 60,
+      "tileY": 4,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-34",
+      "tileX": 47,
+      "tileY": 1,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-35",
+      "tileX": 39,
+      "tileY": 3,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-36",
+      "tileX": 41,
+      "tileY": 6,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-37",
+      "tileX": 41,
+      "tileY": 11,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-38",
+      "tileX": 46,
+      "tileY": 11,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-39",
+      "tileX": 33,
+      "tileY": 13,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-40",
+      "tileX": 29,
+      "tileY": 14,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-41",
+      "tileX": 26,
+      "tileY": 14,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-42",
+      "tileX": 31,
+      "tileY": 9,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-43",
+      "tileX": 28,
+      "tileY": 3,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-44",
+      "tileX": 24,
+      "tileY": 7,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-45",
+      "tileX": 18,
+      "tileY": 12,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-46",
+      "tileX": 12,
+      "tileY": 16,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-47",
+      "tileX": 10,
+      "tileY": 6,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-48",
+      "tileX": 17,
+      "tileY": 3,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-49",
+      "tileX": 54,
+      "tileY": 1,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-50",
+      "tileX": 48,
+      "tileY": 22,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-51",
+      "tileX": 49,
+      "tileY": 27,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-52",
+      "tileX": 42,
+      "tileY": 33,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-53",
+      "tileX": 57,
+      "tileY": 42,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-54",
+      "tileX": 50,
+      "tileY": 42,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-55",
+      "tileX": 21,
+      "tileY": 17,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-56",
+      "tileX": 21,
+      "tileY": 9,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-57",
+      "tileX": 14,
+      "tileY": 9,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-58",
+      "tileX": 29,
+      "tileY": 21,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-59",
+      "tileX": 28,
+      "tileY": 41,
+      "orientation": "vertical"
+    },
+    {
+      "id": "pallet-60",
+      "tileX": 5,
+      "tileY": 3,
+      "orientation": "vertical"
+    }
+  ],
+  "generatorSpawns": [
+    {
+      "x": 21,
+      "y": 1
+    },
+    {
+      "x": 57,
+      "y": 6
+    },
+    {
+      "x": 45,
+      "y": 30
+    },
+    {
+      "x": 7,
+      "y": 43
+    },
+    {
+      "x": 54,
+      "y": 42
+    },
+    {
+      "x": 12,
+      "y": 23
+    },
+    {
+      "x": 46,
+      "y": 5
+    },
+    {
+      "x": 38,
+      "y": 42
+    },
+    {
+      "x": 60,
+      "y": 27
+    },
+    {
+      "x": 44,
+      "y": 3
+    },
+    {
+      "x": 1,
+      "y": 5
+    },
+    {
+      "x": 31,
+      "y": 17
+    },
+    {
+      "x": 22,
+      "y": 36
+    },
+    {
+      "x": 1,
+      "y": 31
+    },
+    {
+      "x": 50,
+      "y": 18
+    }
+  ],
+  "gate": {
+    "side": "left",
+    "tileX": 0,
+    "tileY": 7
+  },
+  "spawns": {
+    "lulu": {
+      "x": 2,
+      "y": 45
+    },
+    "springtrap": {
+      "x": 28,
+      "y": 31
+    },
+    "npcs": [
+      {
+        "x": 24,
+        "y": 12
+      },
+      {
+        "x": 56,
+        "y": 12
+      },
+      {
+        "x": 18,
+        "y": 33
+      },
+      {
+        "x": 47,
+        "y": 32
+      }
+    ]
+  }
+}

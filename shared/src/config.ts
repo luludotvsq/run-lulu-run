@@ -53,6 +53,8 @@ export const GAME_CONFIG = {
   pallet: {
     dropStartupMs: 80,
     stunMs: 1_100,
+    knockbackMs: 180,
+    knockbackDistancePx: TILE_SIZE * 3,
     downedVisibleMs: 420,
     respawnMs: 90_000,
   },

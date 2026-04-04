@@ -69,6 +69,7 @@ export class GameScene extends Phaser.Scene {
   private uiGraphics!: Phaser.GameObjects.Graphics;
   private currentMapId: string | null = null;
   private gateSprite: Phaser.GameObjects.Image | null = null;
+  private generatedFloorTextureKey: string | null = null;
   private readonly handleWindowBlur = () => {
     gameInput.reset();
   };
@@ -262,17 +263,12 @@ export class GameScene extends Phaser.Scene {
     this.currentMapId = map.id;
 
     const cellSize = CLIENT_CONFIG.worldVisuals.cellSizePx;
-
-    for (let tileY = 0; tileY < map.heightTiles; tileY += 1) {
-      for (let tileX = 0; tileX < map.widthTiles; tileX += 1) {
-        const textureKey = (tileX + tileY) % 3 === 0 ? STATIC_TEXTURE_KEYS.floorAlt : STATIC_TEXTURE_KEYS.floorBase;
-        const centerX = tileX * TILE_SIZE + TILE_SIZE * 0.5;
-        const centerY = tileY * TILE_SIZE + TILE_SIZE * 0.5;
-        const floorSprite = this.add.image(centerX, centerY, textureKey).setDepth(-200);
-        floorSprite.setDisplaySize(cellSize, cellSize);
-        this.staticVisuals.push(floorSprite);
-      }
-    }
+    const worldWidth = map.widthTiles * TILE_SIZE;
+    const worldHeight = map.heightTiles * TILE_SIZE;
+    const floorTextureKey = this.buildFloorTexture(map);
+    const floorSprite = this.add.image(0, 0, floorTextureKey).setOrigin(0, 0).setDepth(-200);
+    floorSprite.setDisplaySize(worldWidth, worldHeight);
+    this.staticVisuals.push(floorSprite);
 
     for (const obstacle of map.obstacles) {
       const tileColumns = Math.max(1, Math.round(obstacle.w / TILE_SIZE));
@@ -322,6 +318,10 @@ export class GameScene extends Phaser.Scene {
       visual.destroy();
     }
     this.staticVisuals.length = 0;
+    if (this.generatedFloorTextureKey && this.textures.exists(this.generatedFloorTextureKey)) {
+      this.textures.remove(this.generatedFloorTextureKey);
+    }
+    this.generatedFloorTextureKey = null;
 
     this.gateSprite?.destroy();
     this.gateSprite = null;
@@ -366,6 +366,56 @@ export class GameScene extends Phaser.Scene {
     }
 
     return this.add.rectangle(x, y, width, height, fallbackColor).setDepth(depth);
+  }
+
+  private buildFloorTexture(map: MapData): string {
+    const textureKey = `floor-layer-${map.id}`;
+    const worldWidth = map.widthTiles * TILE_SIZE;
+    const worldHeight = map.heightTiles * TILE_SIZE;
+    if (this.textures.exists(textureKey)) {
+      this.textures.remove(textureKey);
+    }
+
+    const texture = this.textures.createCanvas(textureKey, worldWidth, worldHeight);
+    if (!texture) {
+      throw new Error(`Could not create floor texture for map ${map.id}.`);
+    }
+    const context = texture.getContext();
+    context.imageSmoothingEnabled = false;
+
+    for (let tileY = 0; tileY < map.heightTiles; tileY += 1) {
+      for (let tileX = 0; tileX < map.widthTiles; tileX += 1) {
+        const sourceKey = (tileX + tileY) % 3 === 0 ? STATIC_TEXTURE_KEYS.floorAlt : STATIC_TEXTURE_KEYS.floorBase;
+        const x = tileX * TILE_SIZE;
+        const y = tileY * TILE_SIZE;
+        this.drawFloorTile(context, sourceKey, x, y, TILE_SIZE, sourceKey === STATIC_TEXTURE_KEYS.floorAlt ? map.palette.floorAlt : map.palette.floor);
+      }
+    }
+
+    texture.refresh();
+    texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+    this.generatedFloorTextureKey = textureKey;
+    return textureKey;
+  }
+
+  private drawFloorTile(
+    context: CanvasRenderingContext2D,
+    textureKey: string,
+    x: number,
+    y: number,
+    size: number,
+    fallbackColor: number,
+  ): void {
+    if (this.textures.exists(textureKey)) {
+      const sourceImage = this.textures.get(textureKey).getSourceImage() as CanvasImageSource | null;
+      if (sourceImage) {
+        context.drawImage(sourceImage, x, y, size, size);
+        return;
+      }
+    }
+
+    context.fillStyle = `#${fallbackColor.toString(16).padStart(6, "0")}`;
+    context.fillRect(x, y, size, size);
   }
 
   private getObstacleTextureKey(kind: MapData["obstacles"][number]["kind"], width: number, height: number): string {

@@ -188,3 +188,22 @@
     - desktop keyboard controls still work
     - mobile touch controls can move, attack, vault, drop pallets, and hold interactions
     - touch controls only appear during live gameplay
+
+## Milestone 55 - Static map seam fix and pallet knockback
+
+- Eliminate distracting tile seams on live devices:
+  - stop floor and obstacle tiles from showing moving grid lines as the camera scrolls
+  - keep the pixel-art look crisp while removing per-tile seam artifacts
+- Make pallet hits feel heavier:
+  - when a pallet stuns Springtrap, push him back 3 tiles opposite his travel direction
+  - keep the knockback collision-safe so it does not launch through walls or off the map
+  - keep the existing stun duration unless tuning is needed later
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run browser smoke checks and inspect screenshots
+  - verify:
+    - the floor no longer shows moving seam lines while the camera scrolls
+    - pallet stuns still trigger reliably
+    - Springtrap is pushed back approximately 3 tiles when space allows

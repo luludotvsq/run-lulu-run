@@ -2156,6 +2156,32 @@ function resolveAxisMove(
   actor.y = clamp(adjusted.y, minY, maxY);
 }
 
+function getActorMovementSolids(state: MatchState, actor: ActorBase) {
+  const map = getMap(state);
+  const solids = map.obstacles.map((entry) => ({
+    x: entry.x,
+    y: entry.y,
+    w: entry.w,
+    h: entry.h,
+  }));
+
+  for (const ledge of map.ledges) {
+    solids.push({ x: ledge.x, y: ledge.y, w: ledge.w, h: ledge.h });
+  }
+
+  if (actor.kind === "lulu") {
+    for (const springtrap of state.springtraps) {
+      solids.push(centeredRect(springtrap, springtrap.collider));
+    }
+  }
+
+  if (actor.kind === "springtrap") {
+    solids.push(centeredRect(state.lulu, state.lulu.collider));
+  }
+
+  return solids;
+}
+
 function getTraverseDuration(actor: ActorBase): number {
   return actor.kind === "springtrap" ? GAME_CONFIG.vault.springtrapMs : GAME_CONFIG.vault.luluMs;
 }
@@ -2331,26 +2357,7 @@ function moveActor(
     deltaY *= Math.SQRT1_2;
   }
 
-  const solids = map.obstacles.map((entry) => ({
-    x: entry.x,
-    y: entry.y,
-    w: entry.w,
-    h: entry.h,
-  }));
-
-  for (const ledge of map.ledges) {
-    solids.push({ x: ledge.x, y: ledge.y, w: ledge.w, h: ledge.h });
-  }
-
-  if (actor.kind === "lulu") {
-    for (const springtrap of state.springtraps) {
-      solids.push(centeredRect(springtrap, springtrap.collider));
-    }
-  }
-
-  if (actor.kind === "springtrap") {
-    solids.push(centeredRect(state.lulu, state.lulu.collider));
-  }
+  const solids = getActorMovementSolids(state, actor);
 
   resolveAxisMove(actor, deltaX, "x", solids, worldWidth, worldHeight);
   resolveAxisMove(actor, deltaY, "y", solids, worldWidth, worldHeight);
@@ -2590,12 +2597,52 @@ function finishPalletDrop(state: MatchState, palletId: string): void {
   };
   for (const springtrap of state.springtraps) {
     if (intersects(expandedZone, centeredRect(springtrap, springtrap.collider))) {
+      const knockbackTo = getSpringtrapPalletKnockbackDestination(state, springtrap);
       springtrap.lock = {
         kind: "stunned",
         remainingMs: GAME_CONFIG.pallet.stunMs,
+        knockbackElapsedMs: 0,
+        knockbackDurationMs: GAME_CONFIG.pallet.knockbackMs,
+        knockbackFrom: { x: springtrap.x, y: springtrap.y },
+        knockbackTo,
       };
     }
   }
+}
+
+function getSpringtrapPalletKnockbackDestination(state: MatchState, springtrap: SpringtrapState): Vec2 {
+  const map = getMap(state);
+  const worldWidth = map.widthTiles * TILE_SIZE;
+  const worldHeight = map.heightTiles * TILE_SIZE;
+  const direction = getOppositeDirection(springtrap.facing);
+  const distancePx = GAME_CONFIG.pallet.knockbackDistancePx;
+  const probe: SpringtrapState = {
+    ...springtrap,
+    lock: { kind: "none" },
+  };
+  const solids = getActorMovementSolids(state, probe);
+
+  if (direction === "left" || direction === "right") {
+    resolveAxisMove(
+      probe,
+      direction === "left" ? -distancePx : distancePx,
+      "x",
+      solids,
+      worldWidth,
+      worldHeight,
+    );
+  } else {
+    resolveAxisMove(
+      probe,
+      direction === "up" ? -distancePx : distancePx,
+      "y",
+      solids,
+      worldWidth,
+      worldHeight,
+    );
+  }
+
+  return { x: probe.x, y: probe.y };
 }
 
 function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number): void {
@@ -2660,9 +2707,29 @@ function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number):
     return;
   }
 
-  if (actor.lock.kind === "attackRecovery" || actor.lock.kind === "stunned") {
+  if (actor.lock.kind === "attackRecovery") {
     actor.lock.remainingMs -= deltaMs;
     if (actor.lock.remainingMs <= 0) {
+      actor.lock = { kind: "none" };
+    }
+    return;
+  }
+
+  if (actor.lock.kind === "stunned") {
+    actor.lock.knockbackElapsedMs = Math.min(
+      actor.lock.knockbackDurationMs,
+      actor.lock.knockbackElapsedMs + deltaMs,
+    );
+    const progress =
+      actor.lock.knockbackDurationMs <= 0
+        ? 1
+        : clamp(actor.lock.knockbackElapsedMs / actor.lock.knockbackDurationMs, 0, 1);
+    actor.x = actor.lock.knockbackFrom.x + (actor.lock.knockbackTo.x - actor.lock.knockbackFrom.x) * progress;
+    actor.y = actor.lock.knockbackFrom.y + (actor.lock.knockbackTo.y - actor.lock.knockbackFrom.y) * progress;
+    actor.lock.remainingMs -= deltaMs;
+    if (actor.lock.remainingMs <= 0) {
+      actor.x = actor.lock.knockbackTo.x;
+      actor.y = actor.lock.knockbackTo.y;
       actor.lock = { kind: "none" };
     }
     return;

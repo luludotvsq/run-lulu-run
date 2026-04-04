@@ -33,6 +33,32 @@ Original prompt: Build a small browser game prototype with this exact concept an
     - screenshot: `output/web-game/m54-touch/shot-0.png`
     - state log: `output/web-game/m54-touch/state-0.json`
 
+## Milestone 55
+
+- Status: complete
+- Scope reset before implementation:
+  - remove distracting moving tile seams from the live map rendering
+  - add a 3-tile Springtrap knockback on pallet stun
+- Implemented:
+  - changed the floor layer from many separate tile sprites to one baked floor texture per map, which removes the camera-scroll seam artifacts without flattening obstacle depth
+  - kept walls, rocks, pallets, gate, and actors on their existing sprite/depth paths
+  - extended the shared `stunned` lock to carry pallet knockback interpolation data
+  - added collision-safe Springtrap knockback opposite facing/travel direction when a pallet stun lands
+  - kept the original stun duration while making the knockback happen during the opening part of the stun
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - ran the local dev app at `http://127.0.0.1:5173`
+  - ran a mobile-sized browser screenshot check:
+    - screenshot: `output/web-game/m55-floor/shot-0.png`
+    - state: `output/web-game/m55-floor/state-0.json`
+    - visual result: the distracting moving tile seams no longer showed on the local phone-sized view
+  - ran a deterministic shared-engine probe for pallet knockback:
+    - starting Springtrap x: `880`
+    - knocked-back x: `784`
+    - measured delta: `-96px`
+    - result: exactly `3` tiles of knockback when space allowed
+
 ## Milestone 1
 
 - Status: complete

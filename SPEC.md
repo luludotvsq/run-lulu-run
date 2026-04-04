@@ -223,6 +223,10 @@
   - no physical keyboard required
   - touch movement and action inputs must work in both single-player and multiplayer
   - desktop keyboard controls must remain available
+- Static map visuals must not show tile seams or moving grid artifacts during camera movement on live devices.
+- Pallet stuns should feel physical:
+  - a stunned Springtrap should be knocked back away from the direction of travel
+  - knockback must still respect walls and world bounds
 - Preserve:
   - type safety
   - build stability

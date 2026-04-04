@@ -104,7 +104,14 @@ export type ActorLock =
       sourceId: string;
       sourceType: "ledge" | "pallet";
     }
-  | { kind: "stunned"; remainingMs: number }
+  | {
+      kind: "stunned";
+      remainingMs: number;
+      knockbackElapsedMs: number;
+      knockbackDurationMs: number;
+      knockbackFrom: Vec2;
+      knockbackTo: Vec2;
+    }
   | { kind: "attackWindup"; remainingMs: number; facing: Direction }
   | { kind: "attackActive"; remainingMs: number; hitApplied: boolean; facing: Direction }
   | { kind: "attackRecovery"; remainingMs: number; facing: Direction }

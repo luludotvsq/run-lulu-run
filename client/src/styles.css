@@ -51,11 +51,13 @@ body,
   min-height: 100%;
   width: 100%;
   margin: 0;
+  overscroll-behavior: none;
 }
 
 body {
   overflow: hidden;
   background: #040108;
+  touch-action: manipulation;
 }
 
 button,
@@ -63,6 +65,7 @@ input,
 select,
 textarea {
   font: inherit;
+  touch-action: manipulation;
 }
 
 h1,
@@ -95,6 +98,7 @@ ul {
 canvas {
   display: block;
   image-rendering: pixelated;
+  touch-action: none;
 }
 
 .screen-overlay,

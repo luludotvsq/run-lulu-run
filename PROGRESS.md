@@ -59,6 +59,48 @@ Original prompt: Build a small browser game prototype with this exact concept an
     - measured delta: `-96px`
     - result: exactly `3` tiles of knockback when space allowed
 
+## Milestone 56
+
+- Status: complete
+- Scope reset before implementation:
+  - stop accidental mobile browser zoom from trapping the live game in a zoomed viewport after a double tap
+  - keep the fix inside the app because the issue is browser gesture behavior, not Render hosting
+  - randomize Lulu and Springtrap start points each round instead of always using the authored fixed spawn pair
+  - keep starts away from the map edges and away from the mobile joystick area where possible
+  - keep the spawn randomization shared so single-player and multiplayer both inherit it
+- Completed implementation:
+  - updated the client viewport meta tag to lock the live game to a non-scalable mobile viewport
+  - added browser-side gesture guards in `AppController` so iOS/mobile double taps and gesture zoom do not trap the game in a zoomed page state
+  - added non-scrolling/touch-safe CSS defaults for the full-screen game shell while keeping menu and gameplay taps intact
+  - added config-backed runtime spawn padding and minimum-start-separation values in shared gameplay config
+  - replaced the fixed authored round-start pair with randomized runtime spawn selection for Lulu and Springtrap
+  - spawn selection now:
+    - excludes the currently live generator spots
+    - prefers interior points away from the world edges
+    - keeps Lulu and Springtrap meaningfully separated
+    - falls back cleanly to safe authored/interior anchor points if a map has too few ideal candidates
+  - kept the change in the shared engine so both local single-player and server-authoritative multiplayer inherit the same start logic
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - reused the local production-style server at `http://127.0.0.1:3001`
+  - required Playwright smoke run:
+    - `output/web-game/m56-smoke/shot-0.png`
+    - `output/web-game/m56-smoke/shot-1.png`
+    - `output/web-game/m56-smoke/state-0.json`
+    - `output/web-game/m56-smoke/state-1.json`
+  - mobile touch/zoom probe:
+    - `output/web-game/m56-touch-zoom.png`
+    - `output/web-game/m56-touch-zoom.json`
+    - confirmed `visualViewport.scale = 1` after a rapid double tap on a touch-emulated mobile browser
+    - confirmed the touch controls stayed visible during live gameplay
+  - shared-engine spawn sampler:
+    - `output/web-game/m56-spawn-probe.json`
+    - confirmed both `forest` and `yard-custom` produced multiple distinct Lulu and Springtrap starts across fresh rounds
+    - sampled minimum Lulu edge clearance stayed at or above `170 px`
+    - sampled minimum Springtrap edge clearance stayed at or above `135 px`
+    - sampled minimum Lulu/Springtrap separation stayed at or above `472 px` on `forest` and `595 px` on `yard-custom`
+
 ## Milestone 1
 
 - Status: complete

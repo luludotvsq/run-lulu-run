@@ -207,3 +207,26 @@
     - the floor no longer shows moving seam lines while the camera scrolls
     - pallet stuns still trigger reliably
     - Springtrap is pushed back approximately 3 tiles when space allows
+
+## Milestone 56 - Mobile zoom suppression and clean randomized round spawns
+
+- Stop mobile browsers from zooming the live game when players double tap:
+  - treat the issue as browser gesture handling, not a Render-hosting problem
+  - disable accidental page zoom and gesture scaling during the game UI flow
+  - preserve normal tap/touch gameplay input for menus and live controls
+- Randomize clean round-start spawns for Lulu and Springtrap:
+  - choose fresh start points each round instead of always using the authored fixed pair
+  - keep both starts away from map edges so the mobile stick does not cover Lulu at spawn
+  - keep Lulu and Springtrap meaningfully separated so rounds start clean
+  - keep NPC spawns and map-editor compatibility intact
+- Keep the spawn logic shared-engine-driven so both single-player and multiplayer inherit it.
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run the Playwright loop and inspect screenshots
+  - verify:
+    - double tap no longer zooms the page on the live gameplay shell
+    - live rounds still accept touch input after the zoom guard
+    - Lulu and Springtrap spawn from randomized interior points on both custom maps
+    - round starts no longer place Lulu under the mobile joystick area

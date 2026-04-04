@@ -75,6 +75,8 @@ export const GAME_CONFIG = {
     widthTiles: 64,
     heightTiles: 48,
     actorBoundsInsetPx: TILE_SIZE * 0.75,
+    runtimeSpawnEdgePaddingPx: TILE_SIZE * 4,
+    runtimeSpawnMinSeparationPx: TILE_SIZE * 10,
   },
   singlePlayer: {
     springtrapCount: 1,

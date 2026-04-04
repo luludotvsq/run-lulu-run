@@ -27,6 +27,8 @@ export class AppController {
   private lastObservedSession = gameRuntime.getSession();
   private wasRoundRunning = false;
   private completedRounds = 0;
+  private mobileGestureGuardsInstalled = false;
+  private lastTouchEndMs = 0;
 
   public constructor(appRoot: HTMLDivElement, appTitle = APP_TITLE) {
     this.appTitle = appTitle;
@@ -45,6 +47,7 @@ export class AppController {
   }
 
   public start(): void {
+    this.installMobileGestureGuards();
     this.renderOverlay();
     gameRuntime.subscribe(() => {
       this.overlaySignature = "";
@@ -69,6 +72,45 @@ export class AppController {
       });
 
     window.requestAnimationFrame(this.syncUiLoop);
+  }
+
+  private installMobileGestureGuards(): void {
+    if (this.mobileGestureGuardsInstalled || !CLIENT_CONFIG.browser.preventTouchZoom || navigator.maxTouchPoints <= 0) {
+      return;
+    }
+
+    this.mobileGestureGuardsInstalled = true;
+    const blockEvent = (event: Event) => {
+      event.preventDefault();
+    };
+
+    document.addEventListener("gesturestart", blockEvent, { passive: false });
+    document.addEventListener("gesturechange", blockEvent, { passive: false });
+    document.addEventListener("gestureend", blockEvent, { passive: false });
+    document.addEventListener(
+      "touchmove",
+      (event: TouchEvent) => {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+    document.addEventListener(
+      "touchend",
+      (event: TouchEvent) => {
+        const now = performance.now();
+        if (
+          event.changedTouches.length === 1 &&
+          now - this.lastTouchEndMs <= CLIENT_CONFIG.browser.doubleTapBlockWindowMs
+        ) {
+          event.preventDefault();
+        }
+        this.lastTouchEndMs = now;
+      },
+      { passive: false },
+    );
+    document.addEventListener("dblclick", blockEvent, { passive: false });
   }
 
   private readonly syncUiLoop = (): void => {

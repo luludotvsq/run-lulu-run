@@ -33,6 +33,10 @@ export const CLIENT_CONFIG = {
     actionLabel: "ACT",
     actionHint: "Tap / Hold",
   },
+  browser: {
+    preventTouchZoom: true,
+    doubleTapBlockWindowMs: 320,
+  },
   worldVisuals: {
     cellSizePx: TILE_SIZE,
     walkFrameMs: 120,

@@ -21,13 +21,27 @@ import type {
   Vec2,
 } from "./types.js";
 
-function createLulu(mapId: string): LuluState {
-  const map = getMapById(mapId);
+interface RoundSpawnLayout {
+  lulu: Vec2;
+  springtraps: Vec2[];
+}
+
+function getFacingToward(from: Vec2, to: Vec2): Direction {
+  const deltaX = to.x - from.x;
+  const deltaY = to.y - from.y;
+  if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+    return deltaX >= 0 ? "right" : "left";
+  }
+
+  return deltaY >= 0 ? "down" : "up";
+}
+
+function createLulu(spawn: Vec2): LuluState {
   return {
     id: "lulu",
     kind: "lulu",
-    x: map.spawns.lulu.x,
-    y: map.spawns.lulu.y,
+    x: spawn.x,
+    y: spawn.y,
     facing: "right",
     collider: GAME_CONFIG.collider.lulu,
     lock: { kind: "none" },
@@ -63,51 +77,154 @@ function createSpringtrapAt(spawn: Vec2, id: string, facing: Direction = "left")
   };
 }
 
-function createSpringtraps(mode: MatchMode, mapId: string): SpringtrapState[] {
-  const map = getMapById(mapId);
-  if (mode !== "single") {
-    return [createSpringtrapAt(map.spawns.springtrap, "springtrap")];
+function getSpawnEdgeClearancePx(
+  point: Vec2,
+  collider: ActorBase["collider"],
+  worldWidth: number,
+  worldHeight: number,
+): number {
+  const halfW = collider.w * 0.5;
+  const halfH = collider.h * 0.5;
+  return Math.min(point.x - halfW, worldWidth - (point.x + halfW), point.y - halfH, worldHeight - (point.y + halfH));
+}
+
+function isSpawnPointClear(map: MapData, point: Vec2, collider: ActorBase["collider"]): boolean {
+  const actorRect = centeredRect(point, collider);
+  if (intersects(actorRect, map.gate)) {
+    return false;
   }
 
-  const desiredCount = Math.max(1, GAME_CONFIG.singlePlayer.springtrapCount);
-  const picks: Vec2[] = [{ x: map.spawns.springtrap.x, y: map.spawns.springtrap.y }];
-  const candidatePoints = [
-    ...map.generatorSpawns,
-    ...map.spawns.npcs,
-    { x: map.gate.x + map.gate.w * 0.5, y: map.gate.y + map.gate.h * 0.5 },
-    { x: map.widthTiles * TILE_SIZE * 0.5, y: map.heightTiles * TILE_SIZE * 0.5 },
+  return !getMapStaticSolids(map, true).some((solid) => intersects(actorRect, solid));
+}
+
+function createSpawnAnchorPoints(map: MapData): Vec2[] {
+  const worldWidth = map.widthTiles * TILE_SIZE;
+  const worldHeight = map.heightTiles * TILE_SIZE;
+  return [
+    map.spawns.lulu,
+    map.spawns.springtrap,
+    { x: worldWidth * 0.5, y: worldHeight * 0.5 },
+    { x: worldWidth * 0.25, y: worldHeight * 0.25 },
+    { x: worldWidth * 0.75, y: worldHeight * 0.25 },
+    { x: worldWidth * 0.25, y: worldHeight * 0.75 },
+    { x: worldWidth * 0.75, y: worldHeight * 0.75 },
   ];
+}
+
+function createRoundSpawnCandidates(map: MapData, generators: GeneratorData[]): Vec2[] {
+  const walkGrid = getWalkGrid(map);
+  const liveGeneratorSpots = generators.map((generator) => ({ x: generator.x, y: generator.y }));
+  const seedPoints = [...map.generatorSpawns, ...createSpawnAnchorPoints(map)];
   const uniqueCandidates = new Map<string, Vec2>();
-  for (const point of candidatePoints) {
-    uniqueCandidates.set(`${Math.round(point.x)}:${Math.round(point.y)}`, point);
-  }
 
-  const sortedCandidates = [...uniqueCandidates.values()].sort((left, right) => {
-    const leftDistance = distance(left, map.spawns.lulu);
-    const rightDistance = distance(right, map.spawns.lulu);
-    return rightDistance - leftDistance;
-  });
-
-  for (const candidate of sortedCandidates) {
-    if (picks.length >= desiredCount) {
-      break;
-    }
-
-    const alreadyPicked = picks.some((entry) => distance(entry, candidate) < TILE_SIZE * 2);
-    if (alreadyPicked) {
+  for (const seedPoint of seedPoints) {
+    const candidate = findNearestWalkablePoint(map, seedPoint, walkGrid);
+    const overlapsLiveGenerator = liveGeneratorSpots.some((generator) => distance(generator, candidate) < TILE_SIZE * 0.5);
+    if (overlapsLiveGenerator) {
       continue;
     }
 
-    picks.push({ x: candidate.x, y: candidate.y });
+    uniqueCandidates.set(`${Math.round(candidate.x)}:${Math.round(candidate.y)}`, candidate);
   }
 
-  while (picks.length < desiredCount) {
-    picks.push({ x: map.spawns.springtrap.x, y: map.spawns.springtrap.y });
-  }
+  return [...uniqueCandidates.values()];
+}
 
-  return picks.map((spawn, index) =>
-    createSpringtrapAt(spawn, index === 0 ? "springtrap" : `springtrap-${index + 1}`, index === 0 ? "left" : "up"),
+function getSpawnFallback(map: MapData, collider: ActorBase["collider"], preferredPoint: Vec2): Vec2 {
+  const fallbackPool = [
+    preferredPoint,
+    ...createSpawnAnchorPoints(map),
+    ...map.generatorSpawns,
+  ]
+    .map((point) => findNearestWalkablePoint(map, point))
+    .filter((point) => isSpawnPointClear(map, point, collider))
+    .sort((left, right) => {
+      const worldWidth = map.widthTiles * TILE_SIZE;
+      const worldHeight = map.heightTiles * TILE_SIZE;
+      return (
+        getSpawnEdgeClearancePx(right, collider, worldWidth, worldHeight) -
+        getSpawnEdgeClearancePx(left, collider, worldWidth, worldHeight)
+      );
+    });
+
+  return fallbackPool[0] ?? preferredPoint;
+}
+
+function chooseLuluSpawn(map: MapData, candidates: Vec2[]): Vec2 {
+  const worldWidth = map.widthTiles * TILE_SIZE;
+  const worldHeight = map.heightTiles * TILE_SIZE;
+  const validCandidates = candidates.filter((candidate) => isSpawnPointClear(map, candidate, GAME_CONFIG.collider.lulu));
+  const idealCandidates = validCandidates.filter(
+    (candidate) =>
+      getSpawnEdgeClearancePx(candidate, GAME_CONFIG.collider.lulu, worldWidth, worldHeight) >=
+      GAME_CONFIG.map.runtimeSpawnEdgePaddingPx,
   );
+  const pool = idealCandidates.length > 0 ? idealCandidates : validCandidates;
+  if (pool.length === 0) {
+    return getSpawnFallback(map, GAME_CONFIG.collider.lulu, map.spawns.lulu);
+  }
+
+  return shufflePoints(pool)[0] ?? getSpawnFallback(map, GAME_CONFIG.collider.lulu, map.spawns.lulu);
+}
+
+function chooseSpringtrapSpawn(
+  map: MapData,
+  candidates: Vec2[],
+  luluSpawn: Vec2,
+  takenSpringtrapSpawns: Vec2[],
+): Vec2 | null {
+  const worldWidth = map.widthTiles * TILE_SIZE;
+  const worldHeight = map.heightTiles * TILE_SIZE;
+  const availableCandidates = candidates.filter((candidate) => {
+    if (!isSpawnPointClear(map, candidate, GAME_CONFIG.collider.springtrap)) {
+      return false;
+    }
+    if (distance(candidate, luluSpawn) < TILE_SIZE * 2) {
+      return false;
+    }
+    return !takenSpringtrapSpawns.some((entry) => distance(entry, candidate) < TILE_SIZE * 4);
+  });
+
+  const strictCandidates = availableCandidates.filter(
+    (candidate) =>
+      distance(candidate, luluSpawn) >= GAME_CONFIG.map.runtimeSpawnMinSeparationPx &&
+      getSpawnEdgeClearancePx(candidate, GAME_CONFIG.collider.springtrap, worldWidth, worldHeight) >=
+        GAME_CONFIG.map.runtimeSpawnEdgePaddingPx,
+  );
+
+  const relaxedCandidates = availableCandidates.filter(
+    (candidate) => distance(candidate, luluSpawn) >= GAME_CONFIG.map.runtimeSpawnMinSeparationPx,
+  );
+
+  const pool =
+    strictCandidates.length > 0
+      ? strictCandidates
+      : relaxedCandidates.length > 0
+        ? relaxedCandidates
+        : availableCandidates;
+
+  if (pool.length === 0) {
+    return null;
+  }
+
+  return shufflePoints(pool)[0] ?? null;
+}
+
+function createRoundSpawns(mode: MatchMode, mapId: string, generators: GeneratorData[]): RoundSpawnLayout {
+  const map = getMapById(mapId);
+  const desiredSpringtrapCount = mode === "single" ? Math.max(1, GAME_CONFIG.singlePlayer.springtrapCount) : 1;
+  const candidates = createRoundSpawnCandidates(map, generators);
+  const lulu = chooseLuluSpawn(map, candidates);
+  const springtraps: Vec2[] = [];
+
+  for (let index = 0; index < desiredSpringtrapCount; index += 1) {
+    const spawn =
+      chooseSpringtrapSpawn(map, candidates, lulu, springtraps) ??
+      getSpawnFallback(map, GAME_CONFIG.collider.springtrap, map.spawns.springtrap);
+    springtraps.push(spawn);
+  }
+
+  return { lulu, springtraps };
 }
 
 function createNpcs(mapId: string): NpcState[] {
@@ -170,7 +287,15 @@ function createPallets(mapId: string): PalletRuntime[] {
 }
 
 export function createMatch(mode: MatchMode, mapId = DEFAULT_MAP_ID): MatchState {
-  const springtraps = createSpringtraps(mode, mapId);
+  const generators = createGenerators(mapId);
+  const roundSpawns = createRoundSpawns(mode, mapId, generators);
+  const springtraps = roundSpawns.springtraps.map((spawn, index) =>
+    createSpringtrapAt(
+      spawn,
+      index === 0 ? "springtrap" : `springtrap-${index + 1}`,
+      getFacingToward(spawn, roundSpawns.lulu),
+    ),
+  );
   return {
     mode,
     mapId,
@@ -178,11 +303,11 @@ export function createMatch(mode: MatchMode, mapId = DEFAULT_MAP_ID): MatchState
     exitOpen: false,
     result: "running",
     resultReason: null,
-    lulu: createLulu(mapId),
+    lulu: createLulu(roundSpawns.lulu),
     springtrap: springtraps[0],
     springtraps,
     npcs: createNpcs(mapId),
-    generators: createGenerators(mapId),
+    generators,
     luluRepairingGeneratorId: null,
     luluHealingNpcId: null,
     pallets: createPallets(mapId),

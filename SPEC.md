@@ -209,6 +209,7 @@
 
 - Keep gameplay tuning in config.
 - Keep presentation and audio tuning in config where practical.
+- Keep touch-control sizing and behavior tunable in client config where practical.
 - Missing asset categories must fall back gracefully.
 - Actors must stay fully inside the playable world bounds in both single-player and multiplayer.
 - Each live round must use 10 generators.
@@ -218,6 +219,10 @@
 - Built-in maps remain available for editor/template use, but not live runtime rotation.
 - Single-player start, room create, room join, and rematch must fail gracefully when the runtime custom-map requirement is not met.
 - Keep authored maps and runtime maps compatible with the current `32 px` tile world unless a visual scaling layer changes only presentation.
+- Mobile browsers must have a first-class control path:
+  - no physical keyboard required
+  - touch movement and action inputs must work in both single-player and multiplayer
+  - desktop keyboard controls must remain available
 - Preserve:
   - type safety
   - build stability

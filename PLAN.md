@@ -168,3 +168,23 @@
     - 10 generators appear in live rounds
     - the gate stays closed until all 10 are completed
     - the title art layout keeps both characters visible
+
+## Milestone 54 - Mobile browser controls
+
+- Make the live game playable on mobile browsers without requiring a physical keyboard.
+- Add a client-side input bridge so keyboard and touch controls drive the same session APIs.
+- Add an on-screen mobile control overlay for gameplay:
+  - left-side virtual movement pad
+  - right-side action button for tap/hold interactions
+  - visibility limited to active rounds so menus stay clean
+- Keep desktop keyboard controls fully intact.
+- Update prompts and player-facing copy so action instructions make sense on both keyboard and touch.
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run the Playwright loop and inspect screenshots
+  - verify:
+    - desktop keyboard controls still work
+    - mobile touch controls can move, attack, vault, drop pallets, and hold interactions
+    - touch controls only appear during live gameplay

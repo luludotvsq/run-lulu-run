@@ -50,9 +50,10 @@ export function isHumanVaultReady(state: MatchState, role: Role): boolean {
 
 export function getHudPrompt(state: MatchState, role: Role): string {
   const generatorGoal = getGeneratorGoal(state);
+  const actionLabel = "Action (Space/button)";
 
   if (isHumanVaultReady(state, role)) {
-    return "Move into the ledge and tap Space to vault.";
+    return `Move into the ledge and use ${actionLabel} to vault.`;
   }
 
   if (role === "springtrap") {
@@ -61,8 +62,8 @@ export function getHudPrompt(state: MatchState, role: Role): string {
     }
 
     return state.luluRepairingGeneratorId
-      ? "LULU is repairing. Follow the arrow and attack with Space."
-      : "Space attacks. Kill LULU before she escapes.";
+      ? `LULU is repairing. Follow the arrow and use ${actionLabel} to attack.`
+      : `Use ${actionLabel} to attack. Kill LULU before she escapes.`;
   }
 
   if (state.result === "lulu_win") {
@@ -76,19 +77,19 @@ export function getHudPrompt(state: MatchState, role: Role): string {
     (pallet) => pallet.state === "upright" && Math.hypot(state.lulu.x - pallet.x, state.lulu.y - pallet.y) <= 28,
   );
   if (nearbyUprightPallet) {
-    return "Space drops the nearby pallet.";
+    return `Use ${actionLabel} to drop the nearby pallet.`;
   }
   const nearbyHealer = getNearbyHealerNpc(state);
   if (nearbyHealer) {
     return state.luluHealingNpcId === nearbyHealer.id
-      ? "Holding Space heals LULU."
-      : "Hold Space near this survivor to heal.";
+      ? `Holding ${actionLabel} heals LULU.`
+      : `Hold ${actionLabel} near this survivor to heal.`;
   }
   const nearbyGenerator = getNearbyGenerator(state);
   if (nearbyGenerator && !state.exitOpen) {
     return state.luluRepairingGeneratorId === nearbyGenerator.id
-      ? "Holding Space repairs this generator."
-      : "Hold Space to repair the nearby generator.";
+      ? `Holding ${actionLabel} repairs this generator.`
+      : `Hold ${actionLabel} to repair the nearby generator.`;
   }
 
   if (state.lulu.health === "injured") {

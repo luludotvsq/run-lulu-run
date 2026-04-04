@@ -2,6 +2,7 @@ import { APP_TITLE, getMapById } from "@shared/index.js";
 import type { MatchState, Role } from "@shared/types.js";
 import { createGame } from "../game/createGame.js";
 import { CLIENT_CONFIG } from "../game/clientConfig.js";
+import { gameInput } from "../game/gameInput.js";
 import { LocalSinglePlayerSession } from "../game/LocalSinglePlayerSession.js";
 import { NetworkSession } from "../game/NetworkSession.js";
 import { refreshMapCatalog, primeMapCatalog } from "../game/mapCatalog.js";
@@ -10,6 +11,7 @@ import { AudioController, type MusicCue } from "./audioController.js";
 import { buildTextStatePayload } from "./debugState.js";
 import { createAppLayout, type AppLayout } from "./createAppLayout.js";
 import { getStateSummary, syncHud } from "./hud.js";
+import { TouchControlsController } from "./touchControls.js";
 import type { DebugWindow, PendingAction, UiState } from "./types.js";
 
 export class AppController {
@@ -20,6 +22,7 @@ export class AppController {
   private readonly debugAi = this.params.get("debugAi") === "1";
   private readonly debugWindow = window as DebugWindow;
   private readonly uiState: UiState;
+  private readonly touchControls: TouchControlsController;
   private overlaySignature = "";
   private lastObservedSession = gameRuntime.getSession();
   private wasRoundRunning = false;
@@ -28,6 +31,7 @@ export class AppController {
   public constructor(appRoot: HTMLDivElement, appTitle = APP_TITLE) {
     this.appTitle = appTitle;
     this.layout = createAppLayout(appRoot, appTitle);
+    this.touchControls = new TouchControlsController(this.layout.touchControls);
     createGame(this.layout.gameHost);
     primeMapCatalog();
 
@@ -78,6 +82,8 @@ export class AppController {
     if (session !== this.lastObservedSession) {
       this.lastObservedSession = session;
       this.wasRoundRunning = false;
+      gameInput.reset();
+      this.touchControls.reset();
     }
 
     const info = session?.getInfo() ?? null;
@@ -89,6 +95,11 @@ export class AppController {
       this.audio.setGameplayTrackIndex(this.completedRounds);
     }
     this.wasRoundRunning = roundRunning;
+    const touchControlsVisible = this.touchControls.setGameplayActive(roundRunning);
+    this.layout.hud.root.classList.toggle("hud-overlay-mobile-controls", touchControlsVisible);
+    if (!roundRunning) {
+      gameInput.reset();
+    }
     syncHud(
       this.layout.hud,
       state && !waiting && state.result === "running" ? state : null,

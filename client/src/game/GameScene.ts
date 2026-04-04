@@ -1,10 +1,11 @@
 import Phaser from "phaser";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, GAME_CONFIG, TILE_SIZE } from "@shared/config.js";
 import { getMapById } from "@shared/maps.js";
-import type { ActorBase, Direction, MapData, MatchState, MoveIntent, Role } from "@shared/types.js";
+import type { ActorBase, Direction, MapData, MatchState, Role } from "@shared/types.js";
 import { canSeePoint, getVisionRadius } from "@shared/vision.js";
 import { GAME_ASSET_MANIFEST } from "./assets/manifest.js";
 import { CLIENT_CONFIG } from "./clientConfig.js";
+import { gameInput } from "./gameInput.js";
 import { gameRuntime } from "./runtime.js";
 
 const KEY_TO_DIRECTION: Record<string, Direction | undefined> = {
@@ -18,8 +19,6 @@ const KEY_TO_DIRECTION: Record<string, Direction | undefined> = {
   KeyD: "right",
 };
 
-type DirectionActivity = Record<Direction, boolean>;
-type DirectionOrder = Record<Direction, number>;
 type ActorKind = ActorBase["kind"];
 
 interface ActorVisual {
@@ -41,13 +40,6 @@ function directionFrames(source: Record<Direction, readonly string[]>) {
   return source;
 }
 
-function isPerpendicular(left: Direction, right: Direction): boolean {
-  return (
-    (left === "up" || left === "down") && (right === "left" || right === "right") ||
-    (left === "left" || left === "right") && (right === "up" || right === "down")
-  );
-}
-
 const CHARACTER_FRAME_URLS = {
   lulu: directionFrames(GAME_ASSET_MANIFEST.characters.lulu),
   springtrap: directionFrames(GAME_ASSET_MANIFEST.characters.springtrap),
@@ -67,31 +59,19 @@ const STATIC_TEXTURE_KEYS = {
 } as const;
 
 export class GameScene extends Phaser.Scene {
-  private readonly activeDirections: DirectionActivity = {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
-  };
-
-  private readonly directionOrder: DirectionOrder = {
-    up: 0,
-    down: 0,
-    left: 0,
-    right: 0,
-  };
-
   private readonly managedTextureKeys = new Set<string>();
   private readonly staticVisuals: StaticVisual[] = [];
   private readonly palletSprites = new Map<string, Phaser.GameObjects.Image>();
   private readonly actorSprites = new Map<string, ActorVisual>();
 
-  private orderCounter = 0;
   private graphics!: Phaser.GameObjects.Graphics;
   private fogGraphics!: Phaser.GameObjects.Graphics;
   private uiGraphics!: Phaser.GameObjects.Graphics;
   private currentMapId: string | null = null;
   private gateSprite: Phaser.GameObjects.Image | null = null;
+  private readonly handleWindowBlur = () => {
+    gameInput.reset();
+  };
 
   public constructor() {
     super("game");
@@ -127,13 +107,11 @@ export class GameScene extends Phaser.Scene {
 
       const direction = KEY_TO_DIRECTION[event.code];
       if (direction) {
-        this.activeDirections[direction] = true;
-        this.directionOrder[direction] = ++this.orderCounter;
+        gameInput.setKeyboardDirectionActive(direction, true);
       }
 
       if (event.code === "Space" && !event.repeat) {
-        gameRuntime.getSession()?.setActionHeld(true);
-        gameRuntime.getSession()?.queueAction();
+        gameInput.pressAction("keyboard");
       }
 
       if (event.code === "KeyF") {
@@ -148,12 +126,18 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on("keyup", (event: KeyboardEvent) => {
       const direction = KEY_TO_DIRECTION[event.code];
       if (direction) {
-        this.activeDirections[direction] = false;
+        gameInput.setKeyboardDirectionActive(direction, false);
       }
 
       if (event.code === "Space") {
-        gameRuntime.getSession()?.setActionHeld(false);
+        gameInput.releaseAction("keyboard");
       }
+    });
+
+    window.addEventListener("blur", this.handleWindowBlur);
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
+      window.removeEventListener("blur", this.handleWindowBlur);
+      gameInput.reset();
     });
   }
 
@@ -164,7 +148,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    session.setMoveIntent(this.resolveMoveIntent());
+    session.setMoveIntent(gameInput.getMoveIntent());
+    session.setActionHeld(gameInput.isActionHeld());
+    if (gameInput.consumeQueuedAction()) {
+      session.queueAction();
+    }
     session.update(delta);
 
     const state = session.getState();
@@ -195,23 +183,6 @@ export class GameScene extends Phaser.Scene {
         this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
       }
     }
-  }
-
-  private resolveMoveIntent(): MoveIntent | null {
-    const active = (Object.keys(this.activeDirections) as Direction[])
-      .filter((direction) => this.activeDirections[direction])
-      .sort((left, right) => this.directionOrder[right] - this.directionOrder[left]);
-
-    if (active.length === 0) {
-      return null;
-    }
-
-    const primary = active[0];
-    const secondary = active.find((direction) => isPerpendicular(primary, direction)) ?? null;
-    return {
-      primary,
-      secondary,
-    };
   }
 
   private renderBackdrop(): void {

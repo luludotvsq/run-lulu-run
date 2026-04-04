@@ -2,6 +2,37 @@
 
 Original prompt: Build a small browser game prototype with this exact concept and scope. Use Phaser 3 + TypeScript + Vite for the client, Node.js + Socket.IO for the server, keep one repo with separate client and server folders, create SPEC.md / PLAN.md / PROGRESS.md first, then implement milestone by milestone with validation and progress updates after each milestone.
 
+## Milestone 54
+
+- Status: complete
+- Scope reset before implementation:
+  - add mobile-browser gameplay controls so the game no longer depends on a physical keyboard
+  - preserve the existing desktop keyboard path
+  - keep the implementation shared across single-player and multiplayer session flow
+- Implemented:
+  - added a shared client input state so keyboard and touch feed the same movement/action session APIs
+  - kept keyboard control intact while moving action queue/hold handling out of direct scene event side effects
+  - added a mobile touch overlay for live rounds:
+    - left virtual stick for movement
+    - right `ACT` button for tap/hold interactions
+    - automatic show/hide tied to active gameplay only
+  - added a `?touchControls=1` QA override so the touch overlay can be forced on desktop browsers for testing
+  - updated HUD prompts and README controls copy to say `Action (Space/button)` instead of only referring to the keyboard
+  - lifted the bottom HUD prompt when touch controls are visible so the prompt and controls do not overlap
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - ran the local dev app at `http://127.0.0.1:5173`
+  - ran the required Playwright helper for the desktop path:
+    - screenshot: `output/web-game/m54-keyboard/shot-0.png`
+    - state: `output/web-game/m54-keyboard/state-0.json`
+  - ran a focused Playwright mobile-control probe on `http://127.0.0.1:5173/?touchControls=1` with a phone-sized viewport:
+    - verified the touch overlay became visible
+    - verified stick-driven movement changed LULU position by `121.8px` horizontally and `133.8px` vertically
+    - verified holding `ACT` near a generator set `luluRepairingGeneratorId` to `generator-7`
+    - screenshot: `output/web-game/m54-touch/shot-0.png`
+    - state log: `output/web-game/m54-touch/state-0.json`
+
 ## Milestone 1
 
 - Status: complete

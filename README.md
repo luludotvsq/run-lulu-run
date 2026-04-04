@@ -92,6 +92,12 @@ npm run check
   - LULU: tap `Space` near a pallet to drop it, hold `Space` while standing still to repair or heal
   - Human-controlled LULU or Springtrap: move into a ledge and tap `Space` to vault
   - Human-controlled Springtrap: `Space` attacks when a vault is not starting
+- Touch devices:
+  - live rounds show a left thumbstick plus a right `ACT` button automatically
+  - drag the thumbstick to move
+  - tap `ACT` for quick actions like attacking, vaulting, or dropping a pallet
+  - hold `ACT` while standing still to repair or heal
+  - landscape orientation gives you much more map view than portrait
 - Fullscreen: `F`
 
 ## Title Flow

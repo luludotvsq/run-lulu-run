@@ -98,7 +98,8 @@ canvas {
 }
 
 .screen-overlay,
-.hud-overlay {
+.hud-overlay,
+.touch-controls {
   position: absolute;
   inset: 0;
 }
@@ -117,6 +118,115 @@ canvas {
   justify-content: space-between;
   padding: 18px;
   pointer-events: none;
+}
+
+.hud-overlay-mobile-controls {
+  padding-bottom: calc(178px + env(safe-area-inset-bottom));
+}
+
+.touch-controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 18px;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.touch-cluster {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.touch-pad,
+.touch-action-button {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.touch-pad {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  border: 1px solid rgba(178, 156, 255, 0.28);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(164, 142, 255, 0.14), rgba(11, 9, 21, 0.72) 64%),
+    rgba(8, 7, 16, 0.66);
+  box-shadow:
+    0 20px 42px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(10, 8, 20, 0.74) inset;
+}
+
+.touch-pad-ring,
+.touch-pad-thumb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.touch-pad-ring {
+  width: 110px;
+  height: 110px;
+  border: 1px solid rgba(178, 156, 255, 0.16);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.touch-pad-thumb {
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(224, 230, 255, 0.42);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.22), rgba(184, 168, 255, 0.06) 58%),
+    linear-gradient(180deg, rgba(228, 235, 255, 0.26), rgba(117, 95, 212, 0.2));
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(11, 10, 20, 0.36) inset;
+  transition: transform 50ms linear;
+}
+
+.touch-pad-active {
+  border-color: rgba(178, 156, 255, 0.44);
+}
+
+.touch-action-button {
+  min-width: 112px;
+  min-height: 112px;
+  border: 1px solid rgba(178, 156, 255, 0.42);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.22), transparent 38%),
+    linear-gradient(180deg, rgba(152, 127, 255, 0.94), rgba(84, 55, 207, 0.94));
+  color: #f6f3ff;
+  box-shadow:
+    0 22px 40px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(11, 10, 20, 0.4) inset;
+  font-family: "Chakra Petch", "Oxanium", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.touch-action-button-active {
+  transform: scale(0.96);
+  filter: brightness(1.08);
+}
+
+.touch-caption {
+  color: rgba(223, 228, 255, 0.78);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.34);
 }
 
 .hud-row {
@@ -406,6 +516,10 @@ canvas {
     padding: 12px;
   }
 
+  .hud-overlay-mobile-controls {
+    padding-bottom: calc(164px + env(safe-area-inset-bottom));
+  }
+
   .hud-pill {
     min-width: 92px;
   }
@@ -437,5 +551,31 @@ canvas {
 
   .title-logo-splash {
     font-size: clamp(42px, 13vw, 84px);
+  }
+
+  .touch-controls {
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .touch-pad {
+    width: 132px;
+    height: 132px;
+  }
+
+  .touch-pad-ring {
+    width: 96px;
+    height: 96px;
+  }
+
+  .touch-pad-thumb {
+    width: 48px;
+    height: 48px;
+  }
+
+  .touch-action-button {
+    min-width: 96px;
+    min-height: 96px;
+    font-size: 26px;
   }
 }

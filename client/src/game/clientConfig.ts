@@ -26,6 +26,13 @@ export const CLIENT_CONFIG = {
     titleTrack: "title",
     gameplayTracks: ["gameplayA", "gameplayB"],
   },
+  touchControls: {
+    padMaxRadiusPx: 48,
+    padDeadzonePx: 12,
+    diagonalBias: 0.35,
+    actionLabel: "ACT",
+    actionHint: "Tap / Hold",
+  },
   worldVisuals: {
     cellSizePx: TILE_SIZE,
     walkFrameMs: 120,

@@ -15,6 +15,8 @@ export interface AudioDebugState {
   gameplayTrackIndex: number;
   gameplayTrackCount: number;
   currentTrackSource: string | null;
+  currentTrackPaused: boolean | null;
+  primedTrackCount: number;
 }
 
 export class AudioController {
@@ -31,14 +33,21 @@ export class AudioController {
   private currentTrackSource: string | null = null;
   private gameplayTrackIndex = 0;
   private unlocked = false;
+  private readonly trackPool = new Map<string, HTMLAudioElement>();
+  private applyRequestId = 0;
 
   public constructor() {
-    const unlock = () => {
-      void this.unlock();
+    const handleUserGesture = () => {
+      void this.handleUserGesture();
     };
 
-    window.addEventListener("pointerdown", unlock, { once: true });
-    window.addEventListener("keydown", unlock, { once: true });
+    for (const track of this.getUniqueTracks()) {
+      this.getTrackAudio(track);
+    }
+
+    window.addEventListener("pointerdown", handleUserGesture, { passive: true });
+    window.addEventListener("touchstart", handleUserGesture, { passive: true });
+    window.addEventListener("keydown", handleUserGesture);
   }
 
   public isUnlocked(): boolean {
@@ -46,11 +55,10 @@ export class AudioController {
   }
 
   public async unlock(): Promise<void> {
-    if (this.unlocked) {
-      return;
+    if (!this.unlocked) {
+      this.unlocked = await this.primeTracks();
     }
 
-    this.unlocked = true;
     await this.applyCue(this.currentCue);
   }
 
@@ -84,7 +92,71 @@ export class AudioController {
       gameplayTrackIndex: this.gameplayTrackIndex,
       gameplayTrackCount: this.gameplayTracks.length,
       currentTrackSource: this.currentTrackSource,
+      currentTrackPaused: this.currentAudio ? this.currentAudio.paused : null,
+      primedTrackCount: this.trackPool.size,
     };
+  }
+
+  private getUniqueTracks(): TrackConfig[] {
+    const uniqueTracks = new Map<string, TrackConfig>();
+    for (const track of [this.titleTrack, ...this.gameplayTracks]) {
+      if (!uniqueTracks.has(track.source)) {
+        uniqueTracks.set(track.source, track);
+      }
+    }
+    return [...uniqueTracks.values()];
+  }
+
+  private getTrackAudio(track: TrackConfig): HTMLAudioElement {
+    const existing = this.trackPool.get(track.source);
+    if (existing) {
+      return existing;
+    }
+
+    const audio = new Audio(track.source);
+    audio.loop = true;
+    audio.preload = "auto";
+    this.trackPool.set(track.source, audio);
+    return audio;
+  }
+
+  private async handleUserGesture(): Promise<void> {
+    if (!this.unlocked) {
+      await this.unlock();
+      return;
+    }
+
+    if (this.currentCue !== "none" && this.currentAudio?.paused) {
+      await this.applyCue(this.currentCue);
+    }
+  }
+
+  private async primeTracks(): Promise<boolean> {
+    let primedAnyTrack = false;
+    for (const track of this.getUniqueTracks()) {
+      const audio = this.getTrackAudio(track);
+      const previousMuted = audio.muted;
+      const previousVolume = audio.volume;
+      try {
+        audio.muted = true;
+        audio.volume = 0;
+        await audio.play();
+        primedAnyTrack = true;
+      } catch {
+        // Mobile browsers may reject individual tracks; we only need one successful user-gesture bless.
+      } finally {
+        audio.pause();
+        try {
+          audio.currentTime = 0;
+        } catch {
+          // Ignore reset failures from browsers that haven't buffered yet.
+        }
+        audio.muted = previousMuted;
+        audio.volume = previousVolume;
+      }
+    }
+
+    return primedAnyTrack;
   }
 
   private async applyCue(cue: MusicCue): Promise<void> {
@@ -92,22 +164,21 @@ export class AudioController {
       return;
     }
 
+    const requestId = ++this.applyRequestId;
+
     if (cue === "none") {
-      this.stopCurrent();
+      this.stopAllTracks();
       return;
     }
 
     const nextTrack = cue === "title" ? this.titleTrack : this.gameplayTracks[this.gameplayTrackIndex] ?? this.titleTrack;
-    if (!this.currentAudio) {
-      await this.startTrack(nextTrack);
-      return;
-    }
+    const nextAudio = this.getTrackAudio(nextTrack);
 
-    if (this.currentTrackSource === nextTrack.source) {
-      this.currentAudio.volume = nextTrack.volume;
-      if (this.currentAudio.paused) {
+    if (this.currentTrackSource === nextTrack.source && this.currentAudio === nextAudio) {
+      nextAudio.volume = nextTrack.volume;
+      if (nextAudio.paused) {
         try {
-          await this.currentAudio.play();
+          await nextAudio.play();
         } catch {
           this.unlocked = false;
         }
@@ -115,20 +186,21 @@ export class AudioController {
       return;
     }
 
-    this.stopCurrent();
-    await this.startTrack(nextTrack);
-  }
-
-  private async startTrack(track: TrackConfig): Promise<void> {
-    const audio = new Audio(track.source);
-    audio.loop = true;
-    audio.preload = "auto";
-    audio.volume = track.volume;
-    this.currentAudio = audio;
-    this.currentTrackSource = track.source;
+    this.stopAllTracks(nextAudio);
+    nextAudio.volume = nextTrack.volume;
+    try {
+      nextAudio.currentTime = 0;
+    } catch {
+      // Ignore reset failures and still attempt playback.
+    }
+    this.currentAudio = nextAudio;
+    this.currentTrackSource = nextTrack.source;
 
     try {
-      await audio.play();
+      await nextAudio.play();
+      if (requestId !== this.applyRequestId || this.currentAudio !== nextAudio) {
+        nextAudio.pause();
+      }
     } catch {
       this.unlocked = false;
       this.currentAudio = null;
@@ -136,14 +208,22 @@ export class AudioController {
     }
   }
 
-  private stopCurrent(): void {
-    if (!this.currentAudio) {
-      return;
-    }
+  private stopAllTracks(except: HTMLAudioElement | null = null): void {
+    for (const audio of this.trackPool.values()) {
+      if (audio === except) {
+        continue;
+      }
 
-    this.currentAudio.pause();
-    this.currentAudio.currentTime = 0;
-    this.currentAudio = null;
-    this.currentTrackSource = null;
+      audio.pause();
+      try {
+        audio.currentTime = 0;
+      } catch {
+        // Ignore reset failures for unbuffered tracks.
+      }
+    }
+    if (!except) {
+      this.currentAudio = null;
+      this.currentTrackSource = null;
+    }
   }
 }

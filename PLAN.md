@@ -230,3 +230,24 @@
     - live rounds still accept touch input after the zoom guard
     - Lulu and Springtrap spawn from randomized interior points on both custom maps
     - round starts no longer place Lulu under the mobile joystick area
+
+## Milestone 57 - Mobile round-music continuity
+
+- Fix the mobile browser music regression where round music can stop after the first replay.
+- Treat the issue as a mobile media-lifecycle problem:
+  - avoid spawning fresh audio elements for later round transitions
+  - keep the gameplay/title tracks warmed and reusable after the first user gesture
+  - keep replay/rematch taps able to re-run the audio unlock path if a mobile browser suspends playback
+- Preserve the existing audio behavior on desktop:
+  - title cue stays fixed
+  - gameplay tracks still alternate only after real round ends
+  - the active round track still loops in place
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run the Playwright loop and inspect screenshots
+  - verify:
+    - mobile-style sessions keep music active into round 2 and round 3
+    - gameplay music still alternates `A -> B -> A`
+    - the audio debug state stays unlocked and unpaused through replay transitions

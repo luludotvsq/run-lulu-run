@@ -186,6 +186,7 @@
 - Alternate gameplay tracks only after a real round end.
 - If a track ends before the round does, loop the active round track instead of switching.
 - Handle browser audio unlock gracefully.
+- Mobile browsers must keep music alive across replay/rematch transitions instead of dropping silent after the first replay.
 - Swap or stop music cleanly across scene changes.
 - Keep sensible default volume levels in config.
 

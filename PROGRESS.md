@@ -101,6 +101,37 @@ Original prompt: Build a small browser game prototype with this exact concept an
     - sampled minimum Springtrap edge clearance stayed at or above `135 px`
     - sampled minimum Lulu/Springtrap separation stayed at or above `472 px` on `forest` and `595 px` on `yard-custom`
 
+## Milestone 57
+
+- Status: complete
+- Scope reset before implementation:
+  - fix the mobile-only music dropout after replaying into later rounds
+  - keep the existing desktop audio behavior unchanged
+  - preserve title music, gameplay alternation, and in-round looping
+- Completed implementation:
+  - replaced the one-off mobile unlock path with persistent user-gesture handling so later taps can recover audio if a browser suspends it
+  - changed the music controller from spawning fresh `Audio()` elements on each cue swap to reusing a warmed track pool
+  - primed the unique title/gameplay audio sources during the first user gesture so mobile browsers can reuse those same media elements later
+  - added replay/rematch-time `audio.unlock()` calls so the replay tap itself can re-bless playback on stricter mobile browsers
+  - extended the audio debug payload with paused-state and primed-track info for QA verification
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - required Playwright smoke run:
+    - `output/web-game/m57-smoke/shot-0.png`
+    - `output/web-game/m57-smoke/state-0.json`
+  - touch-style 3-round browser audio probe:
+    - `output/web-game/m57-audio-rounds.json`
+    - `output/web-game/m57-audio-rounds.png`
+    - confirmed round sequence:
+      - round 1 gameplay -> `/game-assets/audio/music/shared-theme.wav`
+      - round 2 gameplay -> `/game-assets/audio/music/round-b-theme.wav`
+      - round 3 gameplay -> `/game-assets/audio/music/shared-theme.wav`
+    - confirmed the audio debug state stayed:
+      - `unlocked: true`
+      - `currentTrackPaused: false`
+      - `primedTrackCount: 2`
+
 ## Milestone 1
 
 - Status: complete

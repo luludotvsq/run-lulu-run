@@ -476,6 +476,7 @@ export class AppController {
 
     this.queryOverlay<HTMLButtonElement>("#play-again-btn")?.addEventListener("click", async () => {
       try {
+        await this.audio.unlock();
         await gameRuntime.getSession()?.requestRematch?.();
       } catch (error) {
         this.uiState.notice = error instanceof Error ? error.message : "Could not start the rematch.";
@@ -485,6 +486,7 @@ export class AppController {
 
     this.queryOverlay<HTMLButtonElement>("#restart-single-btn")?.addEventListener("click", async () => {
       try {
+        await this.audio.unlock();
         await this.startLocalSession(localRole);
       } catch (error) {
         this.uiState.notice = error instanceof Error ? error.message : "Failed to load the map catalog.";

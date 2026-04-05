@@ -251,3 +251,25 @@
     - mobile-style sessions keep music active into round 2 and round 3
     - gameplay music still alternates `A -> B -> A`
     - the audio debug state stays unlocked and unpaused through replay transitions
+
+## Milestone 58 - Mobile audio regression follow-up
+
+- Fix the follow-up mobile regression where the previous continuity patch can leave mobile browsers fully silent.
+- Simplify the music runtime to the safest mobile pattern:
+  - reuse one persistent `HTMLAudioElement` instead of trying to bless multiple elements
+  - swap track sources on that same element across title/gameplay transitions
+  - keep replay taps able to reapply the current cue if the browser paused audio
+- Preserve:
+  - fixed title cue
+  - alternating gameplay tracks by round end only
+  - in-round looping
+  - existing desktop behavior
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run the Playwright loop and inspect screenshots
+  - verify:
+    - mobile-style sessions have sound again on round 1
+    - sound survives replay into rounds 2 and 3
+    - gameplay music still alternates correctly

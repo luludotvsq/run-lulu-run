@@ -132,6 +132,36 @@ Original prompt: Build a small browser game prototype with this exact concept an
       - `currentTrackPaused: false`
       - `primedTrackCount: 2`
 
+## Milestone 58
+
+- Status: complete
+- Scope reset before implementation:
+  - fix the follow-up regression where the previous mobile continuity patch can leave mobile browsers fully silent
+  - replace the multi-element warm-pool approach with one persistent music element that swaps sources in place
+  - keep the desktop alternation behavior unchanged while restoring real sound on mobile
+- Completed implementation:
+  - replaced the multi-element track pool with one persistent reusable `HTMLAudioElement`
+  - kept the first user gesture responsible for blessing a real live track on that one element instead of trying to warm multiple muted elements
+  - kept replay/rematch taps wired into `audio.unlock()` so a mobile tap can immediately reapply the current cue if a browser suspended playback
+  - preserved round-based gameplay alternation and in-round looping while simplifying the mobile path
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - required Playwright smoke run:
+    - `output/web-game/m58-smoke/shot-0.png`
+    - `output/web-game/m58-smoke/state-0.json`
+  - touch-style 3-round browser audio probe:
+    - `output/web-game/m58-audio-rounds.json`
+    - `output/web-game/m58-audio-rounds.png`
+    - confirmed gameplay sequence:
+      - round 1 gameplay -> `/game-assets/audio/music/shared-theme.wav`
+      - round 2 gameplay -> `/game-assets/audio/music/round-b-theme.wav`
+      - round 3 gameplay -> `/game-assets/audio/music/shared-theme.wav`
+    - confirmed all three running-round snapshots reported:
+      - `unlocked: true`
+      - `currentTrackPaused: false`
+      - `primedTrackCount: 1`
+
 ## Milestone 1
 
 - Status: complete

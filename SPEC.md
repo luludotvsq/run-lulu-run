@@ -187,6 +187,7 @@
 - If a track ends before the round does, loop the active round track instead of switching.
 - Handle browser audio unlock gracefully.
 - Mobile browsers must keep music alive across replay/rematch transitions instead of dropping silent after the first replay.
+- Favor a single persistent music element over per-transition media churn when that is needed for mobile-browser reliability.
 - Swap or stop music cleanly across scene changes.
 - Keep sensible default volume levels in config.
 

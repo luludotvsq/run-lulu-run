@@ -1,4 +1,4 @@
-# Dead by Lulu
+# Run, Lulu, Run
 
 In-game displayed title: `Run, Lulu, Run`
 
@@ -14,7 +14,7 @@ Small desktop-first browser prototype built with:
 
 - Single-player:
   - Human plays as LULU
-  - 1 AI Springtrap uses the Hunt / Chase / Search / Cooldown loop
+  - 1 AI AYU uses the Hunt / Chase / Search / Cooldown loop
 - Multiplayer:
   - 2 human players by room code
   - Server-authoritative match state
@@ -28,13 +28,15 @@ Small desktop-first browser prototype built with:
   - Faster smooth four-direction movement
   - Fog of war and line-of-sight blocking
   - Attack, injury, death, burst
+  - Treasure chests with timed opens and role-specific boosts
   - Generator objective with 10 live generators per round
   - Gate opens only after all 10 generators are repaired
-  - Structural ledges and respawning single-use pallets
-  - Stickier single-player Springtrap chase flow
+  - Structural ledges and pallets that either stun AYU on hit or linger briefly and slow AYU on a miss
+  - Stickier single-player AYU chase flow
   - NPC survivor wander / generator-help / flee behavior
   - Single-player NPC survivors that stay invincible, repair slowly, and can heal LULU once each
   - Multiplayer NPC survivors that can be injured, killed, and repair faster than in single-player
+  - Permanent multiplayer compass arrow from AYU toward LULU, with temporary disable from the flashlight boost
   - Strict custom-only runtime rotation from `maps/custom/`
   - Built-in QA map kept as a map-editor template only
 
@@ -90,8 +92,9 @@ npm run check
 - Move: `WASD` or arrow keys
 - `Space` context:
   - LULU: tap `Space` near a pallet to drop it, hold `Space` while standing still to repair or heal
-  - Human-controlled LULU or Springtrap: move into a ledge and tap `Space` to vault
-  - Human-controlled Springtrap: `Space` attacks when a vault is not starting
+  - LULU: hold `Space` near a treasure chest to open it and gain either armor or a flashlight
+  - Human-controlled LULU or AYU: move into a ledge and tap `Space` to vault
+  - Human-controlled AYU: `Space` attacks when a vault is not starting, and also opens treasure chests when standing still beside one
 - Touch devices:
   - live rounds show a left thumbstick plus a right `ACT` button automatically
   - drag the thumbstick to move
@@ -146,18 +149,19 @@ The game client now starts on a full-screen title screen with:
 7. Walk into a ledge without pressing `Space` and confirm LULU stops instead of auto-vaulting.
 8. Move into the same ledge and tap `Space` to confirm LULU vaults it.
 9. Run around walls and rocks to feel the collision.
-10. Let Springtrap find you.
+10. Let AYU find you.
 11. Take one hit and confirm LULU becomes injured and gets a short speed burst.
 12. Find a generator and hold `Space` while standing near it.
 13. Stop repairing and come back to confirm the progress stayed where you left it.
 14. If you get injured, move next to a living NPC survivor and hold `Space` to heal faster than a full generator repair, and confirm the heal shows visible progress.
-15. Watch the NPC survivors and confirm they move early in the round, look for generators, and flee when Springtrap gets close.
-16. Hold `Space` on a generator and confirm Springtrap turns hard toward you quickly, even from far away.
-17. Break line of sight around structures and confirm Springtrap does not stop chasing the instant you round one corner.
-18. Chase through ledges and confirm Springtrap routes through them instead of waiting outside the opening.
-19. After a real escape, confirm Springtrap keeps moving through search / cooldown instead of freezing in place.
-20. Press `Space` near an upright pallet to drop it and confirm it disappears after use.
-21. Repair all 10 generators, then run to the open gate to win.
+15. Watch the NPC survivors and confirm they move early in the round, look for generators, and flee when AYU gets close.
+16. Hold `Space` on a generator and confirm AYU turns hard toward you quickly, even from far away.
+17. Break line of sight around structures and confirm AYU does not stop chasing the instant you round one corner.
+18. Chase through ledges and confirm AYU routes through them instead of waiting outside the opening.
+19. After a real escape, confirm AYU keeps moving through search / cooldown instead of freezing in place.
+20. Hold `Space` near a treasure chest and confirm LULU gains either armor or the 30-second flashlight beam.
+21. Press `Space` near an upright pallet and confirm a hit still stuns AYU, while a miss leaves the pallet down briefly and slows AYU while crossing it.
+22. Repair all 10 generators, then run to the open gate to win.
 
 ### Test the current multiplayer build
 
@@ -169,15 +173,17 @@ The game client now starts on a full-screen title screen with:
    - use the invite link from window 1
 5. Confirm the round starts automatically when player 2 joins.
 6. As LULU, walk to a generator and hold `Space` to repair.
-7. As Springtrap, walk into a ledge without `Space` and confirm you stop at it, then move into it and tap `Space` to vault.
-8. As Springtrap, confirm the HUD shows a directional arrow only while LULU is actively repairing.
+7. As AYU, walk into a ledge without `Space` and confirm you stop at it, then move into it and tap `Space` to vault.
+8. As AYU, confirm the HUD always shows the compass arrow toward LULU in multiplayer.
 9. Attack an NPC survivor twice and confirm:
    - first hit injures
    - second hit kills
    - dead NPCs stop contributing generator pressure
-10. Play until the round ends.
-11. Click `Play Again` in both windows.
-12. Confirm the next round swaps the roles.
+10. As LULU, open a treasure chest and confirm you get either armor or the flashlight.
+11. As AYU, open a treasure chest and confirm you get either the heart charm beam or the wrench projectile.
+12. Play until the round ends.
+13. Click `Play Again` in both windows.
+14. Confirm the next round swaps the roles.
 
 ### Stop everything
 
@@ -198,7 +204,7 @@ ELI5 workflow for making the 2 maps this build expects:
    - at least 10 generator spawns
    - 1 gate
    - 1 LULU spawn
-   - 1 Springtrap spawn
+   - 1 AYU spawn
    - exactly 4 NPC spawns
 6. If you want the game to choose a different mix of 10 generators each time the map loads, place more than 10 generator spawns.
 7. Add obstacles, ledges, pallets, and palette colors wherever you want them.
@@ -299,10 +305,11 @@ Current organized runtime assets live under [client/public/game-assets](/D:/DEAD
 - Gameplay rounds alternate between:
   - [client/public/game-assets/audio/music/shared-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/shared-theme.wav)
   - [client/public/game-assets/audio/music/round-b-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-b-theme.wav)
-- There is a QA-only client query flag for local Springtrap control during development:
+- There is a QA-only client query flag for local AYU control during development:
   - `http://127.0.0.1:5173/?debugRole=springtrap`
+  - The query value still uses `springtrap` for internal compatibility.
   - This is only for local verification and is not part of the intended player flow.
 - The Vite production build still emits a large client chunk warning because Phaser remains bundled into a large client chunk, but the build succeeds.
 - Optional single-player AI debug overlay:
   - `http://127.0.0.1:5173/?debugAi=1`
-  - shows the current Springtrap AI state, state timer, sight-loss timer, last confirmed LULU position, and current Hunt target
+  - shows the current AYU AI state, state timer, sight-loss timer, last confirmed LULU position, and current Hunt target

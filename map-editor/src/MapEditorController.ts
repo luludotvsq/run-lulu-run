@@ -264,7 +264,7 @@ export class MapEditorController {
                 <span>Spawn Target</span>
                 <select id="editor-spawn-target" class="text-input">
                   <option value="lulu">LULU</option>
-                  <option value="springtrap">Springtrap</option>
+                  <option value="springtrap">AYU</option>
                   <option value="npc-1">NPC 1</option>
                   <option value="npc-2">NPC 2</option>
                   <option value="npc-3">NPC 3</option>
@@ -724,7 +724,7 @@ export class MapEditorController {
     }
 
     this.drawSpawn(context, this.state.spawns.lulu, "#ff93c4", "L");
-    this.drawSpawn(context, this.state.spawns.springtrap, "#49b675", "S");
+    this.drawSpawn(context, this.state.spawns.springtrap, "#49b675", "A");
     this.state.spawns.npcs.forEach((entry, index) => {
       this.drawSpawn(context, entry, "#f8d26a", `${index + 1}`);
     });
@@ -945,7 +945,7 @@ export class MapEditorController {
 
     if (isPointEqual(this.state.spawns.springtrap, tile)) {
       this.state.spawns.springtrap = null;
-      this.feedback("Removed Springtrap spawn.", "success");
+      this.feedback("Removed AYU spawn.", "success");
       return;
     }
 

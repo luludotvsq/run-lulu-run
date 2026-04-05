@@ -24,14 +24,14 @@ export const CLIENT_CONFIG = {
     gameplayVolume: 0.28,
     fadeDurationMs: 450,
     titleTrack: "title",
-    gameplayTracks: ["gameplayA", "gameplayB"],
+    gameplayTracks: ["gameplayC", "gameplayD"],
   },
   touchControls: {
     padMaxRadiusPx: 48,
     padDeadzonePx: 12,
     diagonalBias: 0.35,
-    actionLabel: "ACT",
-    actionHint: "Tap / Hold",
+    actionLabel: "",
+    actionHint: "",
   },
   browser: {
     preventTouchZoom: true,
@@ -40,6 +40,11 @@ export const CLIENT_CONFIG = {
   worldVisuals: {
     cellSizePx: TILE_SIZE,
     walkFrameMs: 120,
+    walkFrameGraceMs: 140,
     gateSizePx: TILE_SIZE * 4,
+    chestSizePx: TILE_SIZE,
+    chestRewardSizePx: TILE_SIZE * 0.9,
+    projectileSizePx: TILE_SIZE * 0.72,
+    effectIconSizePx: TILE_SIZE * 0.9,
   },
 } as const;

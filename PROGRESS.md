@@ -168,6 +168,69 @@ Original prompt: Build a small browser game prototype with this exact concept an
     - confirmed repeated mobile-style taps on `ACT` left the audio state unchanged
     - confirmed repeated `ACT` taps caused `0` additional `HTMLMediaElement.play()` calls while gameplay music was already running
 
+## Milestone 59
+
+- Status: complete
+- Scope reset before implementation:
+  - fix the multiplayer join-code input so the field keeps focus while players type
+  - rename the killer role to AYU across the live UI and editor copy
+  - replace the repair-only multiplayer tracker with a permanent compass toward LULU
+  - add treasure chests plus the requested LULU and AYU boost systems
+  - shorten AYU's post-attack recovery window
+  - change missed pallets to linger and slow AYU while preserving hit knockback
+  - prevent generators and other spawned elements from landing on top of ledges or each other
+  - improve walk-cycle reliability while moving
+  - intake the supplied gate and chest/boost art and replace the gate runtime sprites
+- Completed implementation:
+  - removed `joinCode` from the overlay signature so the join-room screen no longer rerenders on every typed character and the room-code field keeps focus while players type
+  - added player-facing AYU naming helpers and updated the live HUD, round-end copy, map-editor spawn label, and debug output to display `AYU` instead of `Springtrap`
+  - changed multiplayer AYU tracking from repair-only to a permanent compass arrow toward LULU, with the arrow temporarily disabled by the flashlight boost
+  - copied the supplied gate, chest, pickup, and effect art into organized runtime folders and swapped the live gate closed/open assets
+  - added treasure chests to shared match state:
+    - 10 closed chests stay active at all times
+    - opening is shorter than generator repair
+    - opening a chest spawns a replacement chest immediately
+    - the opened chest and floating reward linger briefly before disappearing
+  - added LULU chest rewards:
+    - armor blocks exactly one AYU hit and glows while active
+    - flashlight auto-activates for 30 seconds, projects 3 tiles forward, flashes AYU white on hit, and disables the AYU compass arrow for 5 seconds
+  - added AYU chest rewards:
+    - heart charm auto-activates for 30 seconds, projects 5 tiles forward, and charms LULU one tile toward AYU before returning control
+    - wrench auto-activates for 30 seconds and swaps AYU's attack into a 3-tile projectile
+  - shortened AYU attack recovery from `900 ms` to `650 ms`
+  - changed missed pallets to stay down for 5 seconds and slow AYU while crossing them, while direct pallet hits still stun, knock AYU back, and clear the pallet immediately
+  - widened the downed-pallet slow zone slightly so the slowdown is actually noticeable while AYU crosses it
+  - strengthened authored-map validation and runtime placement filtering so generators and actor/chest spawns no longer land on ledges, pallets, gate footprint, or duplicate coordinates
+  - moved one authored generator in `maps/custom/yard-custom.json` off a ledge so both custom maps remain valid under the stricter rules
+  - updated actor animation timing so walk cycles no longer keep resetting while actors are still moving
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - runtime map catalog:
+    - `http://127.0.0.1:3001/maps` reports `ready: true` and `customMapCount: 2`
+  - multiplayer room-code focus probe:
+    - `output/web-game/m59-room-code/result.json`
+    - confirmed all 4 typed characters stayed in the same focused `#join-room-input`
+  - multiplayer browser smoke:
+    - `output/web-game/m59-multiplayer-smoke/host.png`
+    - `output/web-game/m59-multiplayer-smoke/guest.png`
+    - `output/web-game/m59-multiplayer-smoke/states.json`
+    - confirmed live `LULU` / `AYU` roles, permanent compass arrow for AYU, and chest presence in a real two-player room
+  - standard Playwright game-loop smoke:
+    - `output/web-game/m59-skill-smoke/shot-1.png`
+    - `output/web-game/m59-skill-smoke/state-1.json`
+    - no new console errors
+  - deterministic shared-engine probes:
+    - `output/web-game/m59-engine-results.json`
+    - confirmed:
+      - LULU chest armor reward with replacement chest count staying at 10 closed chests
+      - flashlight hits set `trackerDisabledRemainingMs = 5000` and `flashOverlayRemainingMs = 160`
+      - wrench projectile injures LULU
+      - armor absorbs one hit and the next hit injures
+      - heart charm pulls LULU one tile toward AYU and leaves recovery time
+      - missed downed pallets slow AYU while crossing them
+      - fresh runtime rounds on both custom maps keep placements unique with 10 closed chests
+
 ## Milestone 1
 
 - Status: complete
@@ -1818,3 +1881,183 @@ Original prompt: Build a small browser game prototype with this exact concept an
   - deterministic checks confirmed:
     - normal movement now clamps LULU and Springtrap to `24 px` from the left/top edge
     - a forced vault with `to.x = -40` still resolves back to `x = 24`
+
+## Milestone 60
+
+- Status: complete
+- Follow-up startup hardening:
+  - the map catalog loader was surfacing raw `Unexpected token ...` parser errors whenever `/maps` temporarily returned HTML instead of JSON
+  - this can happen during free-host wake-up or other transient startup responses, even when the actual map files are valid
+- Fix applied:
+  - changed `client/src/game/mapCatalog.ts` to request JSON explicitly and bypass response caching
+  - parse the `/maps` body manually so HTML/non-JSON responses turn into a friendly startup message instead of a raw syntax error
+  - added short retries before failing so temporary wake-up responses do not block the player from starting immediately
+  - preserved the explicit custom-map readiness message without retrying over it
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - browser smoke confirmed the single-player title flow still enters a live match after loading the map catalog
+  - browser artifact:
+    - `output/web-game/map-load-local-after-fix/shot-0.png`
+  - second hardening pass:
+    - taught the client-side `/maps` parser to tolerate a UTF-8 BOM and the common `)]}',` anti-JSON prefix before the payload
+    - added a longer retry window and browser-console preview logging when `/maps` still cannot be parsed
+  - browser artifact:
+    - `output/web-game/map-load-local-after-fix-2/shot-0.png`
+  - cache-busting follow-up:
+    - added a fresh versioned endpoint at `/runtime-map-catalog.json`
+    - the client now prefers that endpoint and falls back to `/maps` only if needed
+    - marked both `/maps` and `/runtime-map-catalog.json` as `no-store` / `no-cache` to prevent stale browser or proxy responses from poisoning startup
+  - browser artifacts:
+    - `output/web-game/map-load-local-cachefix/shot-0.png`
+    - `output/web-game/map-load-prod-cachefix/shot-0.png`
+  - local dev port follow-up:
+    - found the root cause behind the repeated local startup failure when Vite auto-moved from `5173` to `5175`
+    - `client/src/game/serverUrl.ts` had only recognized the original dev port, so the client tried to fetch map data from the Vite host instead of the real server on `3001`
+    - updated local server URL resolution to route any local/private-host client port back to `3001`
+    - verified the fixed client enters a live round from `http://localhost:5175`
+
+## Milestone 61
+
+- Status: complete
+- Balance and clarity update:
+  - shortened treasure chest open time from `1600ms` to `900ms`
+  - reduced flashlight range from `3` tiles to `2` tiles
+  - changed flashlight blind logic so AYU is blinded each time she re-enters the beam during the active 30-second flashlight window
+  - added a visible chest-opening progress bar above the chest, matching the existing repair/heal readability pattern
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic gameplay probe confirmed:
+    - chest opening starts and resolves with the new `900ms` duration
+    - flashlight range resolves to `64px` which is `2` tiles
+    - AYU blind/tracker disable triggers on first entry, clears when she leaves the beam, and retriggers to a full `5000ms` on re-entry
+  - validation artifact:
+    - `output/web-game/m61-balance/results.json`
+  - browser smoke confirmed a local round still starts successfully
+  - browser artifact:
+    - `output/web-game/m61-balance-browser/shot-0.png`
+
+## Milestone 62
+
+- Status: complete
+- Visual clarity follow-up:
+  - changed the AYU flashlight blind effect from a translucent wash to a full-screen white flash so the brief blind reads like a real flashbang-style hit
+  - kept AYU's compass visible during flashlight tracker disable, but now draw a large red `X` over it instead of hiding it entirely
+  - reduced the live treasure chest population from `10` active chests to `5`
+  - changed actor walk animation from a time-only cycle to distance-based stepping so LULU and AYU visibly advance through their directional walk frames while moving instead of appearing to glide
+  - hid the HUD and touch controls during AYU's white flash so the screen goes fully blank for the duration of the blind pulse
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - local browser-driven smoke check confirmed a round still starts and the live state now reports exactly `5` active chests
+  - validation artifacts:
+    - `output/web-game/m62-visual/shot-0.png`
+    - `output/web-game/m62-visual/state-0.json`
+  - movement capture check confirmed LULU renders a different mid-walk frame while moving than while idle
+  - movement artifacts:
+    - `output/web-game/m62-visual/walk-idle.png`
+    - `output/web-game/m62-visual/walk-moving.png`
+
+## Milestone 63
+
+- Status: complete
+- Flashlight and walk-feel follow-up:
+  - doubled AYU's flashlight whiteout from `160ms` to `320ms`
+  - moved the flashlight hit response earlier in the shared step loop so AYU is blind-locked before movement and attacks for that frame
+  - added a shared `flashBlinded` actor lock so both AI AYU and multiplayer AYU are briefly stunned and cannot move during the white flash
+  - kept the tracker-disable window and red `X` compass behavior, but clearing AYU's remembered Lulu direction during the blind so the brief flash actually disrupts chase direction
+  - replaced the previous distance-only walk-cycle trigger with a time-based cadence plus a short movement grace window, which keeps the older natural stride feel locally while preventing multiplayer actors from snapping back to idle between network updates
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic engine probe confirmed:
+    - multiplayer AYU receives `flashBlinded`, stays in place, and gets `flashOverlayRemainingMs = 320`
+    - single-player AI AYU receives the same lock and also stays in place
+  - probe artifact:
+    - `output/web-game/m63-flash-walk/results.json`
+  - browser movement capture confirmed LULU still renders a distinct moving frame without the flappy cadence
+  - browser artifacts:
+    - `output/web-game/m63-flash-walk/walk-idle.png`
+    - `output/web-game/m63-flash-walk/walk-moving.png`
+
+## Milestone 64
+
+- Status: complete
+- Flashlight readability and per-hit cooldown follow-up:
+  - made the flashed AYU view explicitly hide LULU during the whiteout window instead of relying only on the overlay
+  - raised the gameplay UI overlay depth so the white flash truly renders above the world layer
+  - changed AYU's flash-blind lock to carry total duration so the sprite can spin a full `360` degrees during the whiteout stun
+  - added a shared `5,000ms` per-hit cooldown for LULU's flashlight and AYU's heart charm
+  - the total item durations still tick down from `30,000ms`, but each successful hit disables that effect for `5,000ms` before it can trigger again
+  - hid the flashlight/charm beam visuals while their per-hit cooldown is active
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic shared-engine probe confirmed:
+    - flashlight hit applies `flashBlinded`, freezes AYU, sets `flashOverlayRemainingMs = 320`, and starts a `5000ms` flashlight cooldown
+    - AYU does not get re-flashed during the cooldown window
+    - after the cooldown expires, a target still inside the beam can be hit again
+    - heart charm applies `charmed`, starts a `5000ms` charm cooldown, and does not reapply during the cooldown window
+  - probe artifact:
+    - `output/web-game/m64-flash-cooldown/results.json`
+  - browser smoke confirmed a local round still starts after the renderer/state changes
+  - browser artifact:
+    - `output/web-game/m64-flash-cooldown/shot-0.png`
+
+## Milestone 65
+
+- Status: complete
+- Mobile touch-control polish:
+  - replaced the fixed left joystick anchor with a floating move zone so the joystick centers on the player's left-thumb press position
+  - the joystick now stays hidden on touch-down and only appears once the drag clears the deadzone, which keeps the screen cleaner and makes accidental off-center presses less punishing
+  - made the action button a plain unlabeled button while preserving its accessibility label
+  - hid the old `Tap / Hold` caption under the action button to match the cleaner button treatment
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - mobile-style browser probe on `http://127.0.0.1:5173/?touchControls=1` confirmed:
+    - the joystick is hidden before drag
+    - the joystick appears after drag input begins
+    - the joystick anchor follows the initial thumb press point
+    - the action button renders with no visible text
+    - LULU still moves under the new floating joystick input
+  - validation artifacts:
+    - `output/web-game/m65-touch-float/results.json`
+    - `output/web-game/m65-touch-float/shot-0.png`
+
+## Milestone 66
+
+- Status: complete
+- Audio rotation expansion:
+  - copied 2 newly supplied gameplay WAVs into the project as `round-c-theme.wav` and `round-d-theme.wav`
+  - expanded the gameplay round-music rotation from 2 tracks to 4 tracks while keeping the title cue fixed
+  - preserved the existing round-based alternation rule, so the next round advances to the next track in the sequence instead of switching mid-round
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - local browser smoke confirmed a round still starts successfully and the debug state now reports `gameplayTrackCount = 4`
+  - browser artifacts:
+    - `output/web-game/m66-audio-rotation/state-0.json`
+    - `output/web-game/m66-audio-rotation/shot-0.png`
+
+## Milestone 67
+
+- Status: complete
+- Gameplay audio rotation trim:
+  - removed the older 2 gameplay tracks from round rotation
+  - gameplay rounds now rotate only between the 2 newly supplied songs
+  - kept the title music fixed and unchanged
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+
+## Milestone 68
+
+- Status: complete
+- Title-audio swap:
+  - changed the fixed title cue to use the copied `round-d-theme.wav` track (`pink noiserunlulurun.wav`)
+  - left gameplay rotation unchanged at the 2 new round tracks
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`

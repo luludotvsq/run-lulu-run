@@ -541,6 +541,7 @@ export function serializeRuntimeMap(map: MapData): string {
 export function validateAuthoredMap(map: AuthoredMapData): string[] {
   const issues: string[] = [];
   const pointKeys = new Set<string>();
+  const occupiedPoints = new Map<string, string>();
   const gateTiles = map.gate ? gateFootprint(map.gate) : null;
 
   function pointInsideRect(point: TilePoint, rect: { tileX: number; tileY: number; tileW: number; tileH: number }): boolean {
@@ -563,6 +564,20 @@ export function validateAuthoredMap(map: AuthoredMapData): string[] {
     );
   }
 
+  function pointInsideLedge(point: TilePoint): boolean {
+    return map.ledges.some((ledge) => {
+      if (ledge.orientation === "horizontal") {
+        return point.y === ledge.tileY && point.x >= ledge.tileX && point.x < ledge.tileX + ledge.spanTiles;
+      }
+
+      return point.x === ledge.tileX && point.y >= ledge.tileY && point.y < ledge.tileY + ledge.spanTiles;
+    });
+  }
+
+  function pointInsidePallet(point: TilePoint): boolean {
+    return map.pallets.some((pallet) => pallet.tileX === point.x && pallet.tileY === point.y);
+  }
+
   function pointInBounds(point: TilePoint, label: string): void {
     if (point.x < 0 || point.y < 0 || point.x >= map.widthTiles || point.y >= map.heightTiles) {
       issues.push(`${label} must stay within the map bounds.`);
@@ -575,9 +590,29 @@ export function validateAuthoredMap(map: AuthoredMapData): string[] {
       return;
     }
 
+    if (pointInsideLedge(point)) {
+      issues.push(`${label} cannot be placed on a ledge.`);
+      return;
+    }
+
+    if (pointInsidePallet(point)) {
+      issues.push(`${label} cannot be placed on a pallet.`);
+      return;
+    }
+
     if (gateTiles && pointInsideRect(point, gateTiles)) {
       issues.push(`${label} cannot be placed inside the gate footprint.`);
     }
+  }
+
+  function pointOverlapsAnotherPlacement(point: TilePoint, label: string): void {
+    const key = `${point.x},${point.y}`;
+    const existing = occupiedPoints.get(key);
+    if (existing) {
+      issues.push(`${label} overlaps ${existing}.`);
+      return;
+    }
+    occupiedPoints.set(key, label);
   }
 
   if (!map.id.trim()) {
@@ -603,7 +638,7 @@ export function validateAuthoredMap(map: AuthoredMapData): string[] {
   }
 
   if (!map.spawns.springtrap) {
-    issues.push("Springtrap spawn is required.");
+    issues.push("AYU spawn is required.");
   }
 
   if (map.spawns.npcs.length !== 4 || map.spawns.npcs.some((entry) => !entry)) {
@@ -617,6 +652,7 @@ export function validateAuthoredMap(map: AuthoredMapData): string[] {
   for (const [index, generator] of map.generatorSpawns.entries()) {
     pointInBounds(generator, `generatorSpawns[${index}]`);
     pointBlocked(generator, `generatorSpawns[${index}]`);
+    pointOverlapsAnotherPlacement(generator, `generatorSpawns[${index}]`);
     const key = `${generator.x},${generator.y}`;
     if (pointKeys.has(`generator:${key}`)) {
       issues.push(`generatorSpawns[${index}] duplicates another generator spawn.`);
@@ -628,11 +664,13 @@ export function validateAuthoredMap(map: AuthoredMapData): string[] {
   if (map.spawns.lulu) {
     pointInBounds(map.spawns.lulu, "spawns.lulu");
     pointBlocked(map.spawns.lulu, "spawns.lulu");
+    pointOverlapsAnotherPlacement(map.spawns.lulu, "spawns.lulu");
   }
 
   if (map.spawns.springtrap) {
     pointInBounds(map.spawns.springtrap, "spawns.springtrap");
     pointBlocked(map.spawns.springtrap, "spawns.springtrap");
+    pointOverlapsAnotherPlacement(map.spawns.springtrap, "spawns.springtrap");
   }
 
   for (const [index, npcSpawn] of map.spawns.npcs.entries()) {
@@ -641,6 +679,7 @@ export function validateAuthoredMap(map: AuthoredMapData): string[] {
     }
     pointInBounds(npcSpawn, `spawns.npcs[${index}]`);
     pointBlocked(npcSpawn, `spawns.npcs[${index}]`);
+    pointOverlapsAnotherPlacement(npcSpawn, `spawns.npcs[${index}]`);
   }
 
   for (const obstacle of map.obstacles) {

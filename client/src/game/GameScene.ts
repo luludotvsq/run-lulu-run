@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, GAME_CONFIG, TILE_SIZE } from "@shared/config.js";
 import { getMapById } from "@shared/maps.js";
-import type { ActorBase, Direction, MapData, MatchState, Role } from "@shared/types.js";
+import type { ActorBase, ChestReward, Direction, MapData, MatchState, Role } from "@shared/types.js";
 import { canSeePoint, getVisionRadius } from "@shared/vision.js";
 import { GAME_ASSET_MANIFEST } from "./assets/manifest.js";
 import { CLIENT_CONFIG } from "./clientConfig.js";
@@ -26,8 +26,13 @@ interface ActorVisual {
   lastX: number;
   lastY: number;
   animElapsedMs: number;
+  moveGraceRemainingMs: number;
   lastFacing: Direction;
-  wasMoving: boolean;
+}
+
+interface ChestVisual {
+  chest: Phaser.GameObjects.Image;
+  reward: Phaser.GameObjects.Image;
 }
 
 type StaticVisual = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
@@ -54,8 +59,16 @@ const STATIC_TEXTURE_KEYS = {
   rock: "obstacle-rock",
   gateClosed: "gate-closed",
   gateOpen: "gate-open",
+  chestClosed: "chest-closed",
+  chestOpen: "chest-open",
   palletUpright: "pallet-upright",
   palletDown: "pallet-down",
+  pickupFlashlight: "pickup-flashlight",
+  pickupWrench: "pickup-wrench",
+  pickupHeartCharm: "pickup-heart-charm",
+  pickupArmor: "pickup-armor",
+  effectCharm: "effect-charm",
+  effectFlashlight: "effect-flashlight",
 } as const;
 
 export class GameScene extends Phaser.Scene {
@@ -63,6 +76,8 @@ export class GameScene extends Phaser.Scene {
   private readonly staticVisuals: StaticVisual[] = [];
   private readonly palletSprites = new Map<string, Phaser.GameObjects.Image>();
   private readonly actorSprites = new Map<string, ActorVisual>();
+  private readonly chestVisuals = new Map<string, ChestVisual>();
+  private readonly projectileSprites = new Map<string, Phaser.GameObjects.Image>();
 
   private graphics!: Phaser.GameObjects.Graphics;
   private fogGraphics!: Phaser.GameObjects.Graphics;
@@ -90,14 +105,22 @@ export class GameScene extends Phaser.Scene {
     this.queueImage(STATIC_TEXTURE_KEYS.rock, GAME_ASSET_MANIFEST.environment.obstacles.rock);
     this.queueImage(STATIC_TEXTURE_KEYS.gateClosed, GAME_ASSET_MANIFEST.environment.interactables.gateClosed);
     this.queueImage(STATIC_TEXTURE_KEYS.gateOpen, GAME_ASSET_MANIFEST.environment.interactables.gateOpen);
+    this.queueImage(STATIC_TEXTURE_KEYS.chestClosed, GAME_ASSET_MANIFEST.environment.interactables.chestClosed);
+    this.queueImage(STATIC_TEXTURE_KEYS.chestOpen, GAME_ASSET_MANIFEST.environment.interactables.chestOpen);
     this.queueImage(STATIC_TEXTURE_KEYS.palletUpright, GAME_ASSET_MANIFEST.environment.interactables.palletUpright);
     this.queueImage(STATIC_TEXTURE_KEYS.palletDown, GAME_ASSET_MANIFEST.environment.interactables.palletDown);
+    this.queueImage(STATIC_TEXTURE_KEYS.pickupFlashlight, GAME_ASSET_MANIFEST.environment.pickups.flashlight);
+    this.queueImage(STATIC_TEXTURE_KEYS.pickupWrench, GAME_ASSET_MANIFEST.environment.pickups.wrench);
+    this.queueImage(STATIC_TEXTURE_KEYS.pickupHeartCharm, GAME_ASSET_MANIFEST.environment.pickups.heartCharm);
+    this.queueImage(STATIC_TEXTURE_KEYS.pickupArmor, GAME_ASSET_MANIFEST.environment.pickups.armor);
+    this.queueImage(STATIC_TEXTURE_KEYS.effectCharm, GAME_ASSET_MANIFEST.ui.effects.charm);
+    this.queueImage(STATIC_TEXTURE_KEYS.effectFlashlight, GAME_ASSET_MANIFEST.ui.effects.flashlight);
   }
 
   public create(): void {
     this.graphics = this.add.graphics();
     this.fogGraphics = this.add.graphics();
-    this.uiGraphics = this.add.graphics().setScrollFactor(0);
+    this.uiGraphics = this.add.graphics().setScrollFactor(0).setDepth(20_000);
     this.cameras.main.roundPixels = true;
     this.applyTextureFilters();
 
@@ -162,7 +185,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.renderMatch(state, session.getLocalRole(), delta);
+      this.renderMatch(state, session.getLocalRole(), delta);
   }
 
   private queueImage(key: string, url: string): void {
@@ -227,6 +250,8 @@ export class GameScene extends Phaser.Scene {
     this.setWorldVisualsVisible(true);
     this.syncGateVisual(map, state.exitOpen);
     this.syncPalletVisuals(state);
+    this.syncChestVisuals(state, map, viewer, visionRadius);
+    this.syncProjectileVisuals(state, map, viewer, visionRadius);
     this.syncActorVisuals(state, map, viewer, visionRadius, localRole, deltaMs);
 
     this.graphics.clear();
@@ -234,6 +259,7 @@ export class GameScene extends Phaser.Scene {
     this.drawLedges(map);
     this.drawGenerators(state, map, viewer, visionRadius);
     this.drawHealingProgress(state);
+    this.drawChestOpeningProgress(state, map, viewer, visionRadius);
 
     for (const npc of state.npcs) {
       if (!canSeePoint(viewer, npc, visionRadius, map.obstacles) || npc.health !== "dead") {
@@ -250,8 +276,10 @@ export class GameScene extends Phaser.Scene {
       this.drawAttackIndicator(springtrap);
     }
 
-    this.drawRepairArrow(state, localRole);
+    this.drawBoostEffects(state, localRole);
+    this.drawTrackerArrow(state, localRole);
     this.drawFog(map, viewer, visionRadius);
+    this.drawFlashOverlay(state, localRole);
   }
 
   private syncMapVisuals(map: MapData): void {
@@ -331,6 +359,17 @@ export class GameScene extends Phaser.Scene {
     }
     this.palletSprites.clear();
 
+    for (const chestVisual of this.chestVisuals.values()) {
+      chestVisual.chest.destroy();
+      chestVisual.reward.destroy();
+    }
+    this.chestVisuals.clear();
+
+    for (const projectileSprite of this.projectileSprites.values()) {
+      projectileSprite.destroy();
+    }
+    this.projectileSprites.clear();
+
     for (const actorVisual of this.actorSprites.values()) {
       actorVisual.sprite.destroy();
     }
@@ -344,6 +383,13 @@ export class GameScene extends Phaser.Scene {
     this.gateSprite?.setVisible(visible);
     for (const palletSprite of this.palletSprites.values()) {
       palletSprite.setVisible(visible);
+    }
+    for (const chestVisual of this.chestVisuals.values()) {
+      chestVisual.chest.setVisible(visible);
+      chestVisual.reward.setVisible(visible && chestVisual.reward.visible);
+    }
+    for (const projectileSprite of this.projectileSprites.values()) {
+      projectileSprite.setVisible(visible && projectileSprite.visible);
     }
     if (!visible) {
       for (const actorVisual of this.actorSprites.values()) {
@@ -453,6 +499,89 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private syncChestVisuals(
+    state: MatchState,
+    map: MapData,
+    viewer: { x: number; y: number },
+    visionRadius: number,
+  ): void {
+    const liveIds = new Set<string>();
+    for (const chest of state.chests) {
+      liveIds.add(chest.id);
+      let visual = this.chestVisuals.get(chest.id);
+      if (!visual) {
+        visual = {
+          chest: this.add.image(chest.x, chest.y, STATIC_TEXTURE_KEYS.chestClosed),
+          reward: this.add.image(chest.x, chest.y, STATIC_TEXTURE_KEYS.pickupArmor),
+        };
+        this.chestVisuals.set(chest.id, visual);
+      }
+
+      visual.chest.setPosition(chest.x, chest.y);
+      visual.chest.setDepth(chest.y + CLIENT_CONFIG.worldVisuals.chestSizePx * 0.18);
+      visual.chest.setDisplaySize(CLIENT_CONFIG.worldVisuals.chestSizePx, CLIENT_CONFIG.worldVisuals.chestSizePx);
+      visual.chest.setTexture(chest.state === "opened" ? STATIC_TEXTURE_KEYS.chestOpen : STATIC_TEXTURE_KEYS.chestClosed);
+      const visible = canSeePoint(viewer, chest, visionRadius, map.obstacles);
+      visual.chest.setVisible(visible);
+
+      if (visible && chest.state === "opened" && chest.reward) {
+        const progress = 1 - chest.openedRemainingMs / Math.max(1, GAME_CONFIG.treasure.openedDisplayMs);
+        visual.reward.setTexture(this.getRewardTextureKey(chest.reward));
+        visual.reward.setPosition(chest.x, chest.y - CLIENT_CONFIG.worldVisuals.chestRewardSizePx * (0.65 + progress * 0.6));
+        visual.reward.setDisplaySize(
+          CLIENT_CONFIG.worldVisuals.chestRewardSizePx,
+          CLIENT_CONFIG.worldVisuals.chestRewardSizePx,
+        );
+        visual.reward.setDepth(visual.chest.depth + 2);
+        visual.reward.setAlpha(1 - progress * 0.35);
+        visual.reward.setVisible(true);
+      } else {
+        visual.reward.setVisible(false);
+      }
+    }
+
+    for (const [id, visual] of this.chestVisuals.entries()) {
+      if (liveIds.has(id)) {
+        continue;
+      }
+      visual.chest.destroy();
+      visual.reward.destroy();
+      this.chestVisuals.delete(id);
+    }
+  }
+
+  private syncProjectileVisuals(
+    state: MatchState,
+    map: MapData,
+    viewer: { x: number; y: number },
+    visionRadius: number,
+  ): void {
+    const liveIds = new Set<string>();
+    for (const projectile of state.projectiles) {
+      liveIds.add(projectile.id);
+      let sprite = this.projectileSprites.get(projectile.id);
+      if (!sprite) {
+        sprite = this.add.image(projectile.x, projectile.y, STATIC_TEXTURE_KEYS.pickupWrench);
+        this.projectileSprites.set(projectile.id, sprite);
+      }
+
+      sprite.setTexture(STATIC_TEXTURE_KEYS.pickupWrench);
+      sprite.setPosition(projectile.x, projectile.y);
+      sprite.setDisplaySize(CLIENT_CONFIG.worldVisuals.projectileSizePx, CLIENT_CONFIG.worldVisuals.projectileSizePx);
+      sprite.setDepth(projectile.y + CLIENT_CONFIG.worldVisuals.projectileSizePx * 0.2);
+      sprite.setAngle(projectile.facing === "left" ? 180 : projectile.facing === "up" ? -90 : projectile.facing === "down" ? 90 : 0);
+      sprite.setVisible(canSeePoint(viewer, projectile, visionRadius, map.obstacles));
+    }
+
+    for (const [id, sprite] of this.projectileSprites.entries()) {
+      if (liveIds.has(id)) {
+        continue;
+      }
+      sprite.destroy();
+      this.projectileSprites.delete(id);
+    }
+  }
+
   private syncActorVisuals(
     state: MatchState,
     map: MapData,
@@ -462,6 +591,7 @@ export class GameScene extends Phaser.Scene {
     deltaMs: number,
   ): void {
     const liveIds = new Set<string>();
+    const hideLuluFromFlashedAyu = localRole === "springtrap" && state.springtrap.flashOverlayRemainingMs > 0;
 
     const syncActor = (actor: ActorBase, visible: boolean) => {
       liveIds.add(actor.id);
@@ -472,25 +602,32 @@ export class GameScene extends Phaser.Scene {
           lastX: actor.x,
           lastY: actor.y,
           animElapsedMs: 0,
+          moveGraceRemainingMs: 0,
           lastFacing: actor.facing,
-          wasMoving: false,
         };
         this.actorSprites.set(actor.id, visual);
       }
 
       const distanceMoved = Math.hypot(actor.x - visual.lastX, actor.y - visual.lastY);
-      const moving = distanceMoved > 0.35 || actor.lock.kind === "vault";
-      if (!moving) {
-        visual.animElapsedMs = 0;
-      } else if (!visual.wasMoving || visual.lastFacing !== actor.facing) {
-        visual.animElapsedMs = 0;
-      } else {
+      const movedThisFrame = distanceMoved > 0.08 || actor.lock.kind === "vault" || actor.lock.kind === "charmed";
+      const facingChanged = actor.facing !== visual.lastFacing;
+      if (movedThisFrame) {
+        if (facingChanged && visual.moveGraceRemainingMs <= 0) {
+          visual.animElapsedMs = 0;
+        }
         visual.animElapsedMs += deltaMs;
+        visual.moveGraceRemainingMs = CLIENT_CONFIG.worldVisuals.walkFrameGraceMs;
+      } else {
+        visual.moveGraceRemainingMs = Math.max(0, visual.moveGraceRemainingMs - deltaMs);
+        if (visual.moveGraceRemainingMs > 0) {
+          visual.animElapsedMs += deltaMs;
+        } else {
+          visual.animElapsedMs = 0;
+        }
       }
 
-      const frameIndex = moving
-        ? Math.floor(visual.animElapsedMs / CLIENT_CONFIG.worldVisuals.walkFrameMs) % 3
-        : 0;
+      const moving = movedThisFrame || visual.moveGraceRemainingMs > 0;
+      const frameIndex = moving ? Math.floor(visual.animElapsedMs / CLIENT_CONFIG.worldVisuals.walkFrameMs) % 3 : 0;
       const textureKey = this.getActorTextureKey(actor.kind, actor.facing, frameIndex);
       if (this.textures.exists(textureKey)) {
         visual.sprite.setTexture(textureKey);
@@ -500,14 +637,17 @@ export class GameScene extends Phaser.Scene {
       visual.sprite.setPosition(actor.x, actor.y);
       visual.sprite.setDepth(actor.y + actorDisplaySize * 0.18);
       visual.sprite.setVisible(visible);
+      visual.sprite.setAngle(this.getActorSpinAngle(actor));
       this.applyActorTint(visual.sprite, actor, state);
       visual.lastFacing = actor.facing;
-      visual.wasMoving = moving;
       visual.lastX = actor.x;
       visual.lastY = actor.y;
     };
 
-    syncActor(state.lulu, localRole === "lulu" || canSeePoint(viewer, state.lulu, visionRadius, map.obstacles));
+    syncActor(
+      state.lulu,
+      !hideLuluFromFlashedAyu && (localRole === "lulu" || canSeePoint(viewer, state.lulu, visionRadius, map.obstacles)),
+    );
 
     for (const springtrap of state.springtraps) {
       syncActor(
@@ -543,8 +683,34 @@ export class GameScene extends Phaser.Scene {
     return `${kind}-${facing}-${frameIndex}`;
   }
 
+  private getRewardTextureKey(reward: ChestReward): string {
+    if (reward === "flashlight") {
+      return STATIC_TEXTURE_KEYS.pickupFlashlight;
+    }
+    if (reward === "wrench") {
+      return STATIC_TEXTURE_KEYS.pickupWrench;
+    }
+    if (reward === "heart_charm") {
+      return STATIC_TEXTURE_KEYS.pickupHeartCharm;
+    }
+    return STATIC_TEXTURE_KEYS.pickupArmor;
+  }
+
   private getActorDisplaySize(): number {
     return CLIENT_CONFIG.worldVisuals.cellSizePx;
+  }
+
+  private getActorSpinAngle(actor: ActorBase): number {
+    if (actor.lock.kind !== "flashBlinded") {
+      return 0;
+    }
+
+    const progress = Phaser.Math.Clamp(
+      (actor.lock.totalMs - actor.lock.remainingMs) / Math.max(1, actor.lock.totalMs),
+      0,
+      1,
+    );
+    return progress * 360;
   }
 
   private applyActorTint(sprite: Phaser.GameObjects.Image, actor: ActorBase, state: MatchState): void {
@@ -552,6 +718,11 @@ export class GameScene extends Phaser.Scene {
 
     if (actor.kind === "lulu" && state.lulu.health === "injured") {
       sprite.setTint(0xffd4ec);
+      return;
+    }
+
+    if (actor.kind === "lulu" && state.lulu.armorCharges > 0) {
+      sprite.setTint(0xe8f8ff);
       return;
     }
 
@@ -616,6 +787,48 @@ export class GameScene extends Phaser.Scene {
     this.graphics.fillRect(x, y, width * progress, height);
   }
 
+  private drawChestOpeningProgress(
+    state: MatchState,
+    map: MapData,
+    viewer: { x: number; y: number },
+    visionRadius: number,
+  ): void {
+    const openings = [
+      state.lulu.lock.kind === "openingChest"
+        ? {
+            chestId: state.lulu.lock.chestId,
+            progress: 1 - state.lulu.lock.remainingMs / Math.max(1, state.lulu.lock.totalMs),
+          }
+        : null,
+      ...state.springtraps.map((springtrap) =>
+        springtrap.lock.kind === "openingChest"
+          ? {
+              chestId: springtrap.lock.chestId,
+              progress: 1 - springtrap.lock.remainingMs / Math.max(1, springtrap.lock.totalMs),
+            }
+          : null,
+      ),
+    ].filter((entry): entry is { chestId: string; progress: number } => Boolean(entry));
+
+    for (const opening of openings) {
+      const chest = state.chests.find((entry) => entry.id === opening.chestId);
+      if (!chest || !canSeePoint(viewer, chest, visionRadius, map.obstacles)) {
+        continue;
+      }
+
+      const width = 32;
+      const height = 5;
+      const x = chest.x - width * 0.5;
+      const y = chest.y - CLIENT_CONFIG.worldVisuals.chestSizePx * 0.95;
+      const progress = Phaser.Math.Clamp(opening.progress, 0, 1);
+
+      this.graphics.fillStyle(0x12161d, 0.92);
+      this.graphics.fillRect(x - 1, y - 1, width + 2, height + 2);
+      this.graphics.fillStyle(0xffcc5c, 1);
+      this.graphics.fillRect(x, y, width * progress, height);
+    }
+  }
+
   private drawNpcCorpse(actor: { x: number; y: number }): void {
     const x = actor.x - 8;
     const y = actor.y - 4;
@@ -666,19 +879,98 @@ export class GameScene extends Phaser.Scene {
     this.graphics.fillRect(x, y, width, height);
   }
 
-  private drawRepairArrow(state: MatchState, localRole: Role): void {
-    if (state.mode !== "multiplayer" || localRole !== "springtrap" || !state.luluRepairingGeneratorId) {
+  private drawBoostEffects(state: MatchState, localRole: Role): void {
+    if (state.lulu.armorCharges > 0) {
+      this.graphics.lineStyle(3, 0xb7ebff, 0.85);
+      this.graphics.strokeCircle(state.lulu.x, state.lulu.y, CLIENT_CONFIG.worldVisuals.cellSizePx * 0.62);
+    }
+
+    if (state.lulu.flashlightRemainingMs > 0 && state.lulu.flashlightCooldownRemainingMs <= 0) {
+      const rect = this.getForwardEffectRect(
+        state.lulu,
+        GAME_CONFIG.boosts.flashlightRangePx,
+        GAME_CONFIG.boosts.flashlightWidthPx,
+      );
+      this.graphics.fillStyle(0xf7f9ff, 0.18);
+      this.graphics.fillRect(rect.x, rect.y, rect.w, rect.h);
+      this.graphics.lineStyle(2, 0xdde7ff, 0.35);
+      this.graphics.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    }
+
+    for (const springtrap of state.springtraps) {
+      if (springtrap.heartCharmRemainingMs <= 0 || springtrap.heartCharmCooldownRemainingMs > 0) {
+        continue;
+      }
+      const rect = this.getForwardEffectRect(
+        springtrap,
+        GAME_CONFIG.boosts.heartCharmRangePx,
+        GAME_CONFIG.boosts.heartCharmWidthPx,
+      );
+      this.graphics.fillStyle(0xff72ba, 0.16);
+      this.graphics.fillRect(rect.x, rect.y, rect.w, rect.h);
+      this.graphics.lineStyle(2, 0xff9dd4, 0.42);
+      this.graphics.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    }
+
+    if (localRole === "springtrap" && state.springtrap.trackerDisabledRemainingMs > 0) {
+      const alpha = Phaser.Math.Clamp(
+        state.springtrap.trackerDisabledRemainingMs / Math.max(1, GAME_CONFIG.boosts.trackerDisableMs),
+        0.18,
+        0.6,
+      );
+      this.uiGraphics.fillStyle(0x6c87ff, alpha * 0.12);
+      this.uiGraphics.fillCircle(CANVAS_WIDTH - 84, 94, 24);
+    }
+  }
+
+  private getForwardEffectRect(actor: ActorBase, rangePx: number, widthPx: number) {
+    const halfWidth = widthPx * 0.5;
+    const halfActorW = actor.collider.w * 0.5;
+    const halfActorH = actor.collider.h * 0.5;
+
+    if (actor.facing === "left") {
+      return {
+        x: actor.x - halfActorW - rangePx,
+        y: actor.y - halfWidth,
+        w: rangePx,
+        h: widthPx,
+      };
+    }
+    if (actor.facing === "right") {
+      return {
+        x: actor.x + halfActorW,
+        y: actor.y - halfWidth,
+        w: rangePx,
+        h: widthPx,
+      };
+    }
+    if (actor.facing === "up") {
+      return {
+        x: actor.x - halfWidth,
+        y: actor.y - halfActorH - rangePx,
+        w: widthPx,
+        h: rangePx,
+      };
+    }
+    return {
+      x: actor.x - halfWidth,
+      y: actor.y + halfActorH,
+      w: widthPx,
+      h: rangePx,
+    };
+  }
+
+  private drawTrackerArrow(state: MatchState, localRole: Role): void {
+    if (state.mode !== "multiplayer" || localRole !== "springtrap") {
       return;
     }
 
-    const generator = state.generators.find((entry) => entry.id === state.luluRepairingGeneratorId);
-    if (!generator) {
-      return;
-    }
-
+    const trackerDisabled = state.springtrap.trackerDisabledRemainingMs > 0;
     const anchorX = CANVAS_WIDTH - 84;
     const anchorY = 94;
-    const angle = Math.atan2(generator.y - state.springtrap.y, generator.x - state.springtrap.x);
+    const angle = trackerDisabled
+      ? -Math.PI * 0.5
+      : Math.atan2(state.lulu.y - state.springtrap.y, state.lulu.x - state.springtrap.x);
     const tailLength = 18;
     const tipLength = 24;
     const wingLength = 9;
@@ -691,15 +983,32 @@ export class GameScene extends Phaser.Scene {
     const rightX = baseX + Math.cos(angle - Math.PI * 0.66) * wingLength;
     const rightY = baseY + Math.sin(angle - Math.PI * 0.66) * wingLength;
 
-    this.uiGraphics.lineStyle(4, 0x3f2308, 0.9);
+    this.uiGraphics.lineStyle(4, trackerDisabled ? 0x231e22 : 0x3f2308, 0.9);
     this.uiGraphics.lineBetween(anchorX, anchorY, baseX, baseY);
-    this.uiGraphics.lineStyle(2, 0xffcc5c, 1);
+    this.uiGraphics.lineStyle(2, trackerDisabled ? 0xd2d7f3 : 0xffcc5c, 1);
     this.uiGraphics.lineBetween(anchorX, anchorY, baseX, baseY);
 
-    this.uiGraphics.fillStyle(0xffcc5c, 1);
+    this.uiGraphics.fillStyle(trackerDisabled ? 0xd2d7f3 : 0xffcc5c, 1);
     this.uiGraphics.fillTriangle(tipX, tipY, leftX, leftY, rightX, rightY);
     this.uiGraphics.fillStyle(0x3f2308, 0.35);
     this.uiGraphics.fillCircle(anchorX, anchorY, 6);
+
+    if (trackerDisabled) {
+      const xRadius = 20;
+      const yRadius = 20;
+      this.uiGraphics.lineStyle(6, 0xff496b, 0.95);
+      this.uiGraphics.lineBetween(anchorX - xRadius, anchorY - yRadius, anchorX + xRadius, anchorY + yRadius);
+      this.uiGraphics.lineBetween(anchorX - xRadius, anchorY + yRadius, anchorX + xRadius, anchorY - yRadius);
+    }
+  }
+
+  private drawFlashOverlay(state: MatchState, localRole: Role): void {
+    if (localRole !== "springtrap" || state.springtrap.flashOverlayRemainingMs <= 0) {
+      return;
+    }
+
+    this.uiGraphics.fillStyle(0xffffff, 1);
+    this.uiGraphics.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
 
   private drawFog(map: MapData, viewer: { x: number; y: number }, visionRadius: number): void {

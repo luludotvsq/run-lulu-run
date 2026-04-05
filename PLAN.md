@@ -273,3 +273,40 @@
     - mobile-style sessions have sound again on round 1
     - sound survives replay into rounds 2 and 3
     - gameplay music still alternates correctly
+
+## Milestone 59 - AYU identity pass, treasure chests, multiplayer tracker, and spawn/combat cleanup
+
+- Fix the multiplayer join-code input regression so players can type the full room code without the input losing focus after each character.
+- Replace player-facing `Springtrap` naming with `AYU` across the live game and map-editor UI while keeping internal compatibility where a full schema rename would be risky.
+- Change the multiplayer killer tracker from repair-only to a persistent compass toward LULU:
+  - visible for AYU during multiplayer rounds
+  - temporarily disabled by flashlight hits
+- Add treasure chests as a new always-present runtime system:
+  - keep 10 openable chests active on the map at all times
+  - opening a chest spawns a replacement elsewhere
+  - show a brief opened-chest plus floating-item payoff before the opened chest disappears
+- Add boost systems:
+  - LULU:
+    - armor that blocks one hit and gives a visible glow
+    - auto-active flashlight that projects forward for 30 seconds and can blind AYU's tracker
+  - AYU:
+    - auto-active pink heart charm beam that can pull LULU forward briefly
+    - wrench boost that turns AYU's attack into a projectile for 30 seconds
+- Retune AYU attack recovery downward from the current post-attack lock so the killer feels less sluggish.
+- Update pallet behavior:
+  - hit pallet: knock AYU back and remove the pallet quickly
+  - miss pallet: keep the dropped pallet around for 5 seconds and slow AYU while crossing it
+- Tighten runtime placement rules so generators, chests, spawns, and other spawned elements do not sit on top of ledges or each other.
+- Improve walk-cycle reliability so LULU and AYU animate more consistently while moving.
+- Replace the closed/open gate runtime art with the newly supplied images.
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run focused browser checks for:
+    - join-code typing
+    - multiplayer tracker visibility/disable window
+    - chest opening and replacement
+    - each boost type
+    - pallet hit/miss behavior
+    - animation cadence

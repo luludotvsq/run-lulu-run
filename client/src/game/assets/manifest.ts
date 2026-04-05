@@ -40,18 +40,30 @@ export const GAME_ASSET_MANIFEST = {
     interactables: {
       gateClosed: at("/environment/interactables/gate/closed.png"),
       gateOpen: at("/environment/interactables/gate/open.png"),
+      chestClosed: at("/environment/interactables/chest/closed.png"),
+      chestOpen: at("/environment/interactables/chest/open.png"),
       palletUpright: at("/environment/interactables/pallet/upright.png"),
       palletDown: at("/environment/interactables/pallet/down.png"),
+    },
+    pickups: {
+      flashlight: at("/environment/pickups/flashlight.png"),
+      wrench: at("/environment/pickups/wrench.png"),
+      heartCharm: at("/environment/pickups/heart-charm.png"),
+      armor: at("/environment/pickups/armor.png"),
     },
   },
   audio: {
     music: {
-      title: at("/audio/music/shared-theme.wav"),
-      gameplayA: at("/audio/music/shared-theme.wav"),
-      gameplayB: at("/audio/music/round-b-theme.wav"),
+      title: at("/audio/music/round-d-theme.wav"),
+      gameplayC: at("/audio/music/round-c-theme.wav"),
+      gameplayD: at("/audio/music/round-d-theme.wav"),
     },
   },
   ui: {
     titleSplash: at("/ui/title-splash.jpg"),
+    effects: {
+      charm: at("/ui/effects/charm.png"),
+      flashlight: at("/ui/effects/flashlight.png"),
+    },
   },
 } as const;

@@ -12,6 +12,7 @@ export interface HudElements {
 
 export interface TouchControlsElements {
   root: HTMLElement;
+  moveRegion: HTMLElement;
   pad: HTMLElement;
   thumb: HTMLElement;
   actionButton: HTMLButtonElement;
@@ -50,7 +51,7 @@ export function createAppLayout(appRoot: HTMLDivElement, appTitle: string): AppL
           <div id="hud-ai-debug" class="hud-debug hidden"></div>
         </div>
         <div id="touch-controls" class="touch-controls hidden" aria-hidden="true">
-          <div class="touch-cluster touch-move-cluster">
+          <div id="touch-move-region" class="touch-cluster touch-move-cluster">
             <div id="touch-pad" class="touch-pad">
               <div class="touch-pad-ring"></div>
               <div id="touch-pad-thumb" class="touch-pad-thumb"></div>
@@ -58,7 +59,7 @@ export function createAppLayout(appRoot: HTMLDivElement, appTitle: string): AppL
             <p class="touch-caption">Move</p>
           </div>
           <div class="touch-cluster touch-action-cluster">
-            <button id="touch-action-button" class="touch-action-button" type="button">ACT</button>
+            <button id="touch-action-button" class="touch-action-button" type="button" aria-label="Action"></button>
             <p id="touch-action-hint" class="touch-caption">Tap / Hold</p>
           </div>
         </div>
@@ -81,6 +82,7 @@ export function createAppLayout(appRoot: HTMLDivElement, appTitle: string): AppL
     },
     touchControls: {
       root: requireElement(appRoot.querySelector<HTMLElement>("#touch-controls"), "Touch controls"),
+      moveRegion: requireElement(appRoot.querySelector<HTMLElement>("#touch-move-region"), "Touch move region"),
       pad: requireElement(appRoot.querySelector<HTMLElement>("#touch-pad"), "Touch pad"),
       thumb: requireElement(appRoot.querySelector<HTMLElement>("#touch-pad-thumb"), "Touch thumb"),
       actionButton: requireElement(appRoot.querySelector<HTMLButtonElement>("#touch-action-button"), "Touch action button"),

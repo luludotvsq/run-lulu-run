@@ -28,6 +28,8 @@ export class TouchControlsController {
   private readonly available: boolean;
   private padPointerId: number | null = null;
   private actionPointerId: number | null = null;
+  private padCenterX = 0;
+  private padCenterY = 0;
   private visible = false;
 
   public constructor(elements: TouchControlsElements) {
@@ -35,6 +37,7 @@ export class TouchControlsController {
     this.available = supportsTouchControls();
     this.elements.actionButton.textContent = CLIENT_CONFIG.touchControls.actionLabel;
     this.elements.actionHint.textContent = CLIENT_CONFIG.touchControls.actionHint;
+    this.elements.actionHint.classList.toggle("hidden", CLIENT_CONFIG.touchControls.actionHint.length === 0);
     this.attachListeners();
   }
 
@@ -54,28 +57,31 @@ export class TouchControlsController {
   public reset(): void {
     this.padPointerId = null;
     this.actionPointerId = null;
+    this.padCenterX = 0;
+    this.padCenterY = 0;
     this.elements.root.classList.remove("touch-action-button-active");
     this.elements.actionButton.classList.remove("touch-action-button-active");
     this.elements.pad.classList.remove("touch-pad-active");
+    this.elements.pad.classList.remove("touch-pad-visible");
     this.elements.thumb.style.transform = "translate(-50%, -50%)";
     gameInput.setTouchMoveIntent(null);
     gameInput.releaseAction("touch");
   }
 
   private attachListeners(): void {
-    this.elements.pad.addEventListener("pointerdown", (event) => {
+    this.elements.moveRegion.addEventListener("pointerdown", (event) => {
       if (!this.visible || this.padPointerId !== null) {
         return;
       }
 
       event.preventDefault();
       this.padPointerId = event.pointerId;
-      this.elements.pad.setPointerCapture(event.pointerId);
-      this.elements.pad.classList.add("touch-pad-active");
+      this.elements.moveRegion.setPointerCapture(event.pointerId);
+      this.placePadAtPointer(event);
       this.updatePadIntent(event);
     });
 
-    this.elements.pad.addEventListener("pointermove", (event) => {
+    this.elements.moveRegion.addEventListener("pointermove", (event) => {
       if (event.pointerId !== this.padPointerId) {
         return;
       }
@@ -89,17 +95,18 @@ export class TouchControlsController {
         return;
       }
 
-      if (this.elements.pad.hasPointerCapture(event.pointerId)) {
-        this.elements.pad.releasePointerCapture(event.pointerId);
+      if (this.elements.moveRegion.hasPointerCapture(event.pointerId)) {
+        this.elements.moveRegion.releasePointerCapture(event.pointerId);
       }
       this.padPointerId = null;
       this.elements.pad.classList.remove("touch-pad-active");
+      this.elements.pad.classList.remove("touch-pad-visible");
       this.elements.thumb.style.transform = "translate(-50%, -50%)";
       gameInput.setTouchMoveIntent(null);
     };
 
-    this.elements.pad.addEventListener("pointerup", releasePad);
-    this.elements.pad.addEventListener("pointercancel", releasePad);
+    this.elements.moveRegion.addEventListener("pointerup", releasePad);
+    this.elements.moveRegion.addEventListener("pointercancel", releasePad);
 
     this.elements.actionButton.addEventListener("pointerdown", (event) => {
       if (!this.visible || this.actionPointerId !== null) {
@@ -130,21 +137,36 @@ export class TouchControlsController {
     this.elements.actionButton.addEventListener("pointercancel", releaseAction);
   }
 
+  private placePadAtPointer(event: PointerEvent): void {
+    const regionRect = this.elements.moveRegion.getBoundingClientRect();
+    const padHalfSize = Math.max(this.elements.pad.offsetWidth * 0.5, CLIENT_CONFIG.touchControls.padMaxRadiusPx + 20);
+    const localX = clampMagnitude(event.clientX - regionRect.left, regionRect.width);
+    const localY = clampMagnitude(event.clientY - regionRect.top, regionRect.height);
+    this.padCenterX = Math.min(Math.max(localX, padHalfSize), Math.max(padHalfSize, regionRect.width - padHalfSize));
+    this.padCenterY = Math.min(Math.max(localY, padHalfSize), Math.max(padHalfSize, regionRect.height - padHalfSize));
+    this.elements.pad.style.left = `${this.padCenterX}px`;
+    this.elements.pad.style.top = `${this.padCenterY}px`;
+  }
+
   private updatePadIntent(event: PointerEvent): void {
-    const rect = this.elements.pad.getBoundingClientRect();
-    const centerX = rect.left + rect.width * 0.5;
-    const centerY = rect.top + rect.height * 0.5;
+    const regionRect = this.elements.moveRegion.getBoundingClientRect();
+    const centerX = regionRect.left + this.padCenterX;
+    const centerY = regionRect.top + this.padCenterY;
     const rawDx = event.clientX - centerX;
     const rawDy = event.clientY - centerY;
     const radius = CLIENT_CONFIG.touchControls.padMaxRadiusPx;
     const magnitude = Math.hypot(rawDx, rawDy);
 
     if (magnitude <= CLIENT_CONFIG.touchControls.padDeadzonePx) {
+      this.elements.pad.classList.remove("touch-pad-visible");
+      this.elements.pad.classList.remove("touch-pad-active");
       this.elements.thumb.style.transform = "translate(-50%, -50%)";
       gameInput.setTouchMoveIntent(null);
       return;
     }
 
+    this.elements.pad.classList.add("touch-pad-visible");
+    this.elements.pad.classList.add("touch-pad-active");
     const scale = magnitude > radius ? radius / magnitude : 1;
     const dx = clampMagnitude(rawDx * scale, radius);
     const dy = clampMagnitude(rawDy * scale, radius);

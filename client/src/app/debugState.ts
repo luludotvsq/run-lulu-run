@@ -1,6 +1,7 @@
 import { GAME_CONFIG, canSeePoint, getMapById, getVisionRadius, roundValue } from "@shared/index.js";
 import type { AudioDebugState } from "./audioController.js";
 import type { ActiveSession } from "../game/runtime.js";
+import { getRoleDisplayNameLower } from "./displayNames.js";
 import { getHudPrompt, getStateSummary, isHumanVaultReady } from "./hud.js";
 import type { UiState } from "./types.js";
 
@@ -41,10 +42,16 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
   }
 
   const localRole = session.getLocalRole();
+  const displayRole = getRoleDisplayNameLower(localRole);
   const map = getMapById(state.mapId);
   const viewer = localRole === "lulu" ? state.lulu : state.springtrap;
   const radius = getVisionRadius(localRole);
   const humanVaultReady = isHumanVaultReady(state, localRole);
+  const luluVisibleToViewer =
+    localRole === "lulu" ||
+    (localRole === "springtrap" && state.springtrap.flashOverlayRemainingMs > 0
+      ? false
+      : canSeePoint(viewer, state.lulu, radius, map.obstacles));
 
   return JSON.stringify({
     coordinateSystem: "origin top-left, +x right, +y down",
@@ -56,12 +63,14 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
     mapId: state.mapId,
     result: state.result,
     exitOpen: state.exitOpen,
-    localRole,
+    localRole: displayRole,
     completedGenerators: state.generators.filter((generator) => generator.completed).length,
     totalGenerators: state.generators.length,
     gateStatus: state.exitOpen ? "open" : "closed",
     luluRepairingGeneratorId: state.luluRepairingGeneratorId,
     luluHealingNpcId: state.luluHealingNpcId,
+    luluOpeningChestId: state.luluOpeningChestId,
+    ayuOpeningChestId: state.springtrapOpeningChestId,
     humanVaultReady,
     humanVaultDirection: humanVaultReady ? viewer.facing : null,
     luluHealingProgress:
@@ -75,9 +84,12 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       y: roundValue(state.lulu.y),
       facing: state.lulu.facing,
       health: state.lulu.health,
-      visible: localRole === "lulu" || canSeePoint(viewer, state.lulu, radius, map.obstacles),
+      armorCharges: state.lulu.armorCharges,
+      flashlightRemainingMs: roundValue(state.lulu.flashlightRemainingMs),
+      flashlightCooldownRemainingMs: roundValue(state.lulu.flashlightCooldownRemainingMs),
+      visible: luluVisibleToViewer,
     },
-    springtrap: {
+    ayu: {
       x: roundValue(state.springtrap.x),
       y: roundValue(state.springtrap.y),
       facing: state.springtrap.facing,
@@ -85,6 +97,11 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       aiState: state.springtrap.aiState,
       aiStateRemainingMs: roundValue(state.springtrap.aiStateRemainingMs),
       aiChaseSightLossMs: roundValue(state.springtrap.aiChaseSightLossMs),
+      trackerDisabledRemainingMs: roundValue(state.springtrap.trackerDisabledRemainingMs),
+      flashOverlayRemainingMs: roundValue(state.springtrap.flashOverlayRemainingMs),
+      heartCharmRemainingMs: roundValue(state.springtrap.heartCharmRemainingMs),
+      heartCharmCooldownRemainingMs: roundValue(state.springtrap.heartCharmCooldownRemainingMs),
+      wrenchRemainingMs: roundValue(state.springtrap.wrenchRemainingMs),
       distractionNpcId: state.springtrap.aiDistractionNpcId,
       huntTarget: state.springtrap.aiHuntTarget
         ? {
@@ -101,7 +118,7 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       searchWaypointIndex: state.springtrap.aiSearchWaypointIndex,
       visible: localRole === "springtrap" || canSeePoint(viewer, state.springtrap, radius, map.obstacles),
     },
-    springtraps: state.springtraps.map((springtrap) => ({
+    ayus: state.springtraps.map((springtrap) => ({
       id: springtrap.id,
       x: roundValue(springtrap.x),
       y: roundValue(springtrap.y),
@@ -134,6 +151,22 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       y: roundValue(generator.y),
       progress: roundValue(generator.progress),
       completed: generator.completed,
+    })),
+    chests: state.chests.map((chest) => ({
+      id: chest.id,
+      state: chest.state,
+      reward: chest.reward,
+      openedBy: chest.openedBy === "springtrap" ? "ayu" : chest.openedBy,
+      x: roundValue(chest.x),
+      y: roundValue(chest.y),
+    })),
+    projectiles: state.projectiles.map((projectile) => ({
+      id: projectile.id,
+      kind: projectile.kind,
+      x: roundValue(projectile.x),
+      y: roundValue(projectile.y),
+      facing: projectile.facing,
+      remainingPx: roundValue(projectile.remainingPx),
     })),
     generatorRepairRange: GAME_CONFIG.generator.repairRange,
   });

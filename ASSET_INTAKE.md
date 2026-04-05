@@ -181,17 +181,30 @@
 ### Updated audio assignment
 
 - Title screen music:
-  - [client/public/game-assets/audio/music/shared-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/shared-theme.wav)
+  - [client/public/game-assets/audio/music/round-d-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-d-theme.wav)
 - Gameplay round music A:
-  - [client/public/game-assets/audio/music/shared-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/shared-theme.wav)
+  - [client/public/game-assets/audio/music/round-c-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-c-theme.wav)
 - Gameplay round music B:
-  - [client/public/game-assets/audio/music/round-b-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-b-theme.wav)
+  - [client/public/game-assets/audio/music/round-d-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-d-theme.wav)
+
+### Additional copied runtime audio assets - 2026-04-05
+
+- The newly supplied gameplay tracks were copied into the project at:
+  - [client/public/game-assets/audio/music/round-c-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-c-theme.wav)
+  - [client/public/game-assets/audio/music/round-d-theme.wav](/D:/DEAD%20BY%20LULU/client/public/game-assets/audio/music/round-d-theme.wav)
+- Source files used for the copies:
+  - `C:\Users\sadne\Desktop\starstruckrunlulurun.wav`
+  - `C:\Users\sadne\Desktop\pink noiserunlulurun.wav`
+- Because the runtime copies now exist inside the project, the original desktop WAV files are no longer required by the build.
 
 ### Runtime behavior notes
 
 - Title music stays fixed.
+- Title music now uses the newly supplied `pink noiserunlulurun.wav` runtime copy.
 - Gameplay music alternates only after a real round ends.
 - If a gameplay track reaches the end before the round does, that same track loops for the rest of the round.
+- The gameplay round rotation now cycles through the 2 newly supplied tracks only: A -> B -> A.
+- The earlier gameplay tracks based on `shared-theme.wav` and `round-b-theme.wav` are no longer used for round rotation.
 - Runtime map rotation now blocks unless exactly 2 valid custom maps are present in `maps/custom/`.
 
 ## Runtime Splash Artwork Update - 2026-04-04
@@ -210,3 +223,43 @@
 - The displayed `Run, LULU, Run` title is layered in the top-left quadrant in DOM/CSS instead of being baked into the image file.
 - The `1 Player`, `2 Players`, and `Join Game` actions are layered in the bottom-right quadrant.
 - The original art file was not destructively edited; the title and buttons remain layout-controlled so they can be moved later without re-exporting the image.
+
+## AYU Chest And Gate Asset Update - 2026-04-04
+
+### New copied runtime assets
+
+- The supplied chest, pickup, effect, and gate artwork was copied into the project at:
+  - [client/public/game-assets/environment/interactables/chest/closed.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/chest/closed.png)
+  - [client/public/game-assets/environment/interactables/chest/open.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/chest/open.png)
+  - [client/public/game-assets/environment/pickups/flashlight.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/pickups/flashlight.png)
+  - [client/public/game-assets/environment/pickups/wrench.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/pickups/wrench.png)
+  - [client/public/game-assets/environment/pickups/heart-charm.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/pickups/heart-charm.png)
+  - [client/public/game-assets/environment/pickups/armor.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/pickups/armor.png)
+  - [client/public/game-assets/ui/effects/charm.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/ui/effects/charm.png)
+  - [client/public/game-assets/ui/effects/flashlight.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/ui/effects/flashlight.png)
+  - [client/public/game-assets/environment/interactables/gate/closed.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/gate/closed.png)
+  - [client/public/game-assets/environment/interactables/gate/open.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/gate/open.png)
+
+### Source files used for the copies
+
+- `D:\iCloudDrive\Calligraphy\IMG_3508 7.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 8.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 2.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 6.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 4.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 3.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 5.png`
+- `D:\iCloudDrive\Calligraphy\IMG_3508 9.png`
+
+### Mapping notes
+
+- The new gate art replaced the previous runtime gate closed/open files in place.
+- Treasure chests now use dedicated closed/open chest sprites instead of procedural placeholder boxes.
+- The floating chest reward uses the copied pickup art for flashlight, wrench, heart charm, and armor.
+- The flashlight and heart charm gameplay effects still use procedural beam graphics for clarity, while the copied effect icons are kept in the project for future presentation passes.
+- Player-facing naming now calls the killer `AYU`, but the existing character compatibility folders still use `springtrap` in file paths so older asset wiring and debug URLs do not break.
+
+### Cleanup note
+
+- Because the runtime copies now exist inside the project, the original external source PNGs are no longer required by the build.

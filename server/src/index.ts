@@ -51,6 +51,9 @@ const clientIndexPath = path.join(clientDistPath, "index.html");
 const hasBuiltClient = existsSync(clientDistPath) && existsSync(clientIndexPath);
 
 app.get("/health", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   res.json({
     ok: true,
     game: APP_TITLE,
@@ -58,13 +61,24 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.get("/maps", async (_req, res) => {
+async function sendRuntimeCatalog(res: express.Response): Promise<void> {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   const status = await getRuntimeCatalogStatus();
   res.json({
     ...status,
     maps: status.maps,
     customMapsDirectory: getCustomMapsDirectory(),
   });
+}
+
+app.get("/maps", async (_req, res) => {
+  await sendRuntimeCatalog(res);
+});
+
+app.get("/runtime-map-catalog.json", async (_req, res) => {
+  await sendRuntimeCatalog(res);
 });
 
 if (hasBuiltClient) {

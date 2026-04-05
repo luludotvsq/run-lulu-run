@@ -9,6 +9,7 @@ import { refreshMapCatalog, primeMapCatalog } from "../game/mapCatalog.js";
 import { gameRuntime } from "../game/runtime.js";
 import { AudioController, type MusicCue } from "./audioController.js";
 import { buildTextStatePayload } from "./debugState.js";
+import { getRoleDisplayName } from "./displayNames.js";
 import { createAppLayout, type AppLayout } from "./createAppLayout.js";
 import { getStateSummary, syncHud } from "./hud.js";
 import { TouchControlsController } from "./touchControls.js";
@@ -139,6 +140,11 @@ export class AppController {
     this.wasRoundRunning = roundRunning;
     const touchControlsVisible = this.touchControls.setGameplayActive(roundRunning);
     this.layout.hud.root.classList.toggle("hud-overlay-mobile-controls", touchControlsVisible);
+    const blindedByFlash =
+      (session?.getLocalRole() ?? null) === "springtrap" &&
+      (state?.springtrap.flashOverlayRemainingMs ?? 0) > 0;
+    this.layout.hud.root.classList.toggle("blinded-ui", blindedByFlash);
+    this.layout.touchControls.root.classList.toggle("blinded-ui", blindedByFlash);
     if (!roundRunning) {
       gameInput.reset();
     }
@@ -449,6 +455,7 @@ export class AppController {
 
   private renderRoundEndOverlay(state: MatchState, localRole: Role, mode: "single" | "multiplayer"): void {
     const map = getMapById(state.mapId);
+    const localRoleLabel = getRoleDisplayName(localRole);
     const localWon =
       (localRole === "lulu" && state.result === "lulu_win") ||
       (localRole === "springtrap" && state.result === "springtrap_win");
@@ -458,7 +465,7 @@ export class AppController {
         <div class="menu-panel">
           <p class="menu-kicker">${localWon ? "Round Won" : "Round Lost"}</p>
           <h2>${localWon ? "Play Again?" : "Round Over"}</h2>
-          <p class="status-copy">Map: ${map.name} | Role: ${localRole.toUpperCase()}</p>
+          <p class="status-copy">Map: ${map.name} | Role: ${localRoleLabel}</p>
           <p class="status-copy">${localWon ? "You won the round." : "You lost the round."}</p>
           <p class="status-copy">${getStateSummary(state)}</p>
           ${this.uiState.notice ? `<p class="status-copy">${this.uiState.notice}</p>` : ""}
@@ -510,7 +517,6 @@ export class AppController {
       screen: this.uiState.screen,
       notice: this.uiState.notice,
       busy: this.uiState.pendingAction,
-      joinCode: this.uiState.joinCode,
       mode: info?.mode ?? "menu",
       waiting: info?.waiting ?? false,
       roomCode: info?.roomCode ?? null,

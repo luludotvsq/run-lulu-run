@@ -190,6 +190,9 @@
 - Favor a single persistent music element over per-transition media churn when that is needed for mobile-browser reliability.
 - Swap or stop music cleanly across scene changes.
 - Keep sensible default volume levels in config.
+- The multiplayer killer tracker should be a permanent compass toward LULU for AYU unless a gameplay effect temporarily disables it.
+- Treasure chests should be a first-class runtime system with replacement spawns and short open animations.
+- Boosts should be runtime-configurable and shared across single-player and multiplayer simulation where possible.
 
 ### F. Title screen and displayed branding
 
@@ -230,10 +233,13 @@
 - Pallet stuns should feel physical:
   - a stunned Springtrap should be knocked back away from the direction of travel
   - knockback must still respect walls and world bounds
+- Dropped pallets that miss AYU should remain briefly and slow AYU while she crosses them.
 - Lulu and Springtrap should start each round from randomized clean spawn points:
   - not pinned to one authored corner every game
   - kept away from map edges and mobile-control overlap zones where practical
   - kept reasonably separated from each other at round start
+- Runtime placement must keep generators, treasure chests, and spawn points off ledges and off each other.
+- Player-facing naming should use `AYU` for the killer role even if internal compatibility keeps the historical `springtrap` identifiers in code/data.
 - Preserve:
   - type safety
   - build stability

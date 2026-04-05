@@ -1,6 +1,7 @@
 import { GAME_CONFIG, canActorManualVaultWithFacing, getMapById } from "@shared/index.js";
 import type { MatchState, Role } from "@shared/types.js";
 import type { HudElements } from "./createAppLayout.js";
+import { getKillerDisplayName, getRoleDisplayName } from "./displayNames.js";
 
 function getGeneratorGoal(state: MatchState): number {
   return state.generators.length || GAME_CONFIG.generator.totalCount;
@@ -43,6 +44,21 @@ function getNearbyHealerNpc(state: MatchState) {
     )[0];
 }
 
+function getNearbyChest(state: MatchState, role: Role) {
+  const actor = role === "springtrap" ? state.springtrap : state.lulu;
+  return [...state.chests]
+    .filter(
+      (chest) =>
+        chest.state === "closed" &&
+        Math.hypot(actor.x - chest.x, actor.y - chest.y) <= GAME_CONFIG.treasure.interactRange,
+    )
+    .sort(
+      (left, right) =>
+        Math.hypot(actor.x - left.x, actor.y - left.y) -
+        Math.hypot(actor.x - right.x, actor.y - right.y),
+    )[0];
+}
+
 export function isHumanVaultReady(state: MatchState, role: Role): boolean {
   const actor = role === "springtrap" ? state.springtrap : state.lulu;
   return canActorManualVaultWithFacing(state, actor);
@@ -58,19 +74,31 @@ export function getHudPrompt(state: MatchState, role: Role): string {
 
   if (role === "springtrap") {
     if (state.result === "springtrap_win") {
-      return "Springtrap won the round.";
+      return "AYU won the round.";
     }
 
-    return state.luluRepairingGeneratorId
-      ? `LULU is repairing. Follow the arrow and use ${actionLabel} to attack.`
-      : `Use ${actionLabel} to attack. Kill LULU before she escapes.`;
+    const nearbyChest = getNearbyChest(state, role);
+    if (nearbyChest) {
+      return state.springtrapOpeningChestId === nearbyChest.id
+        ? `Holding ${actionLabel} opens this treasure chest.`
+        : `Hold ${actionLabel} near the treasure chest to open it.`;
+    }
+
+    if (state.springtrap.heartCharmRemainingMs > 0) {
+      return `AYU's charm is active. Face LULU to pull her in.`;
+    }
+    if (state.springtrap.wrenchRemainingMs > 0) {
+      return `AYU's wrench is active. ${actionLabel} throws a projectile.`;
+    }
+
+    return `Follow the arrow and use ${actionLabel} to attack. Kill LULU before she escapes.`;
   }
 
   if (state.result === "lulu_win") {
     return "LULU escaped.";
   }
   if (state.result === "springtrap_win") {
-    return "Springtrap won the round.";
+    return "AYU won the round.";
   }
 
   const nearbyUprightPallet = state.pallets.some(
@@ -85,6 +113,12 @@ export function getHudPrompt(state: MatchState, role: Role): string {
       ? `Holding ${actionLabel} heals LULU.`
       : `Hold ${actionLabel} near this survivor to heal.`;
   }
+  const nearbyChest = getNearbyChest(state, role);
+  if (nearbyChest) {
+    return state.luluOpeningChestId === nearbyChest.id
+      ? `Holding ${actionLabel} opens this treasure chest.`
+      : `Hold ${actionLabel} to open the nearby treasure chest.`;
+  }
   const nearbyGenerator = getNearbyGenerator(state);
   if (nearbyGenerator && !state.exitOpen) {
     return state.luluRepairingGeneratorId === nearbyGenerator.id
@@ -92,6 +126,12 @@ export function getHudPrompt(state: MatchState, role: Role): string {
       : `Hold ${actionLabel} to repair the nearby generator.`;
   }
 
+  if (state.lulu.armorCharges > 0) {
+    return "LULU's armor is active. The next AYU hit will be blocked.";
+  }
+  if (state.lulu.flashlightRemainingMs > 0) {
+    return "LULU's flashlight is active. Face AYU to blind her tracker.";
+  }
   if (state.lulu.health === "injured") {
     return "Injured: one more hit kills LULU.";
   }
@@ -127,7 +167,7 @@ function syncAiDebug(hud: HudElements, state: MatchState | null, role: Role | nu
   hud.aiDebug.textContent = state.springtraps
     .map(
       (springtrap, index) =>
-        `S${index + 1} ${springtrap.aiState.toUpperCase()} ${Math.max(0, springtrap.aiStateRemainingMs / 1000).toFixed(2)}s SL ${Math.max(0, springtrap.aiChaseSightLossMs / 1000).toFixed(2)} Last ${formatDebugPoint(springtrap.aiLastConfirmedLulu)} Hunt ${formatDebugPoint(springtrap.aiHuntTarget)}`,
+        `A${index + 1} ${springtrap.aiState.toUpperCase()} ${Math.max(0, springtrap.aiStateRemainingMs / 1000).toFixed(2)}s SL ${Math.max(0, springtrap.aiChaseSightLossMs / 1000).toFixed(2)} Last ${formatDebugPoint(springtrap.aiLastConfirmedLulu)} Hunt ${formatDebugPoint(springtrap.aiHuntTarget)}`,
     )
     .join(" | ");
 }
@@ -144,7 +184,7 @@ export function getStateSummary(state: MatchState | null): string {
       Math.hypot(state.lulu.x - left.x, state.lulu.y - left.y) -
       Math.hypot(state.lulu.x - right.x, state.lulu.y - right.y),
   )[0];
-  const killerLabel = state.springtraps.length === 1 ? "Springtrap" : `Springtraps ${state.springtraps.length}`;
+  const killerLabel = getKillerDisplayName(state.springtraps.length);
   return `${state.mapId} | Gens ${completedGenerators}/${generatorGoal} | LULU ${Math.round(state.lulu.x)}, ${Math.round(state.lulu.y)} | ${killerLabel} | Nearest ${nearestSpringtrap ? `${Math.round(nearestSpringtrap.x)}, ${Math.round(nearestSpringtrap.y)}` : "--"}`;
 }
 
@@ -156,7 +196,7 @@ export function syncHud(hud: HudElements, state: MatchState | null, role: Role |
   }
 
   hud.root.classList.remove("hidden");
-  hud.role.textContent = role.toUpperCase();
+  hud.role.textContent = getRoleDisplayName(role);
   hud.generators.textContent = `${state.generators.filter((generator) => generator.completed).length} / ${state.generators.length}`;
   hud.gate.textContent = state.exitOpen ? "Open" : "Closed";
   hud.health.textContent = state.lulu.health[0].toUpperCase() + state.lulu.health.slice(1);

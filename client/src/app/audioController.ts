@@ -99,7 +99,14 @@ export class AudioController {
   }
 
   private async handleUserGesture(): Promise<void> {
-    await this.unlock();
+    if (!this.unlocked) {
+      await this.unlock();
+      return;
+    }
+
+    if (this.currentCue !== "none" && this.audio.paused) {
+      await this.applyCue(this.currentCue);
+    }
   }
 
   private getTrackForCue(cue: MusicCue): TrackConfig | null {

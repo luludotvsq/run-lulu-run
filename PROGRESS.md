@@ -144,6 +144,7 @@ Original prompt: Build a small browser game prototype with this exact concept an
   - kept the first user gesture responsible for blessing a real live track on that one element instead of trying to warm multiple muted elements
   - kept replay/rematch taps wired into `audio.unlock()` so a mobile tap can immediately reapply the current cue if a browser suspended playback
   - preserved round-based gameplay alternation and in-round looping while simplifying the mobile path
+  - tightened the global gesture recovery hook so routine gameplay taps no longer re-run the current music cue while audio is already playing
 - Validation:
   - `npm run typecheck`
   - `npm run build`
@@ -161,6 +162,11 @@ Original prompt: Build a small browser game prototype with this exact concept an
       - `unlocked: true`
       - `currentTrackPaused: false`
       - `primedTrackCount: 1`
+  - follow-up touch-action regression probe:
+    - `output/web-game/m58-action-stutter/shot-0.png`
+    - `output/web-game/m58-action-stutter/state-0.json`
+    - confirmed repeated mobile-style taps on `ACT` left the audio state unchanged
+    - confirmed repeated `ACT` taps caused `0` additional `HTMLMediaElement.play()` calls while gameplay music was already running
 
 ## Milestone 1
 

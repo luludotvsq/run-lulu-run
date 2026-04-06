@@ -2,6 +2,75 @@
 
 Original prompt: Build a small browser game prototype with this exact concept and scope. Use Phaser 3 + TypeScript + Vite for the client, Node.js + Socket.IO for the server, keep one repo with separate client and server folders, create SPEC.md / PLAN.md / PROGRESS.md first, then implement milestone by milestone with validation and progress updates after each milestone.
 
+## Milestone 72
+
+- Status: complete
+- AYU attack-flow and AI pathing follow-up:
+  - restored AYU attacks to the action button for both melee and wrench shots instead of the temporary touch-only melee shortcut
+  - gave AYU ledge-crossing priority over attacking when the action press can trigger a ledge traversal, including facing-direction action vaults while standing still
+  - allowed AYU to keep moving during attack windup/active frames, while preserving the existing successful-hit microstun on both melee hits and wrench hits
+  - restored single-player AI melee attack decisions, removed the wrench-range retreat behavior that was backing AYU away from LULU to fish for max-range shots, and added a short committed backoff step when blocked route commits get AYU stuck on corners
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic combat/pathing probe:
+    - `output/web-game/m72-attack-ai.json`
+    - confirmed melee action startup now moves AYU while `lock: "attackWindup"` is active
+    - confirmed successful melee hits still end with `luluLockOnHit: "hitSpin"` and `ayuLockOnHit: "hitStunned"`
+    - confirmed action-press near a ledge now yields `resultingLock: "vault"` instead of an attack lock
+    - confirmed wrench AI no longer moved backward in a clean firing lane
+    - confirmed blocked search-route commits now reverse briefly with `commitDirection: "left"` and `commitRemainingMs: 240`
+  - required Playwright helper smoke:
+    - `output/web-game/m72-smoke/shot-0.png`
+    - `output/web-game/m72-smoke/state-0.json`
+    - visually confirmed the live client still launches and renders cleanly after the AYU combat/pathing changes
+
+## Milestone 71
+
+- Status: complete
+- Combat readability and hit-flow follow-up:
+  - hid armor glow, flashlight beam blocks, and heart charm beam blocks whenever their owner is outside the viewer's fog-of-war visibility, while still preserving local-owner visibility and AYU flash-blind hiding rules
+  - removed AYU's generic post-attack recovery lock and converted unarmed hits into direct contact attacks instead of action-triggered melee swings
+  - added config-backed victim spin locks and AYU hit-stun timing so successful touch hits and successful wrench hits now make LULU or NPCs spin in place while AYU briefly stalls long enough for a small escape window
+  - applied the same hit-spin behavior to multiplayer NPC hits and kept single-player NPCs unharmed
+  - updated single-player AI behavior so unarmed AYU now confirms damage by touch without slipping back into the old melee action lock path
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic combat probe:
+    - `output/web-game/m71-combat.json`
+    - confirmed multiplayer touch hits now set `luluLock: "hitSpin"` and `springtrapLock: "hitStunned"`
+    - confirmed single-player AI touch hits injure LULU without entering `attackWindup` / `attackActive`
+    - confirmed wrench shots clear AYU back to `lock: "none"` before impact, then apply `hitStunned` only when the projectile actually lands
+    - confirmed multiplayer NPC touch hits now set `npcLock: "hitSpin"` with the same AYU hit-stun response
+  - required Playwright helper smoke:
+    - `output/web-game/m71-smoke/shot-0.png`
+    - `output/web-game/m71-smoke/state-0.json`
+    - visually confirmed the live single-player client still renders and advances without new console errors after the combat/FOW changes
+
+## Milestone 70
+
+- Status: complete
+- Follow-up AI and readability fix:
+  - tightened single-player AYU wrench logic so she only holds a ranged shot when the actual projectile lane to LULU is clear instead of relying on a center-to-center sight line that can still be blocked by nearby obstacle edges
+  - added persistent carried-item icons above the owning character for flashlight, wrench, and heart charm so those active effects stay readable for their full active durations
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic AI lane probe:
+    - `output/web-game/m70-wrench-lane.json`
+    - confirmed a blocked lane with `centerSight: true` now leaves AYU out of `attackWindup`
+    - confirmed the matching clear lane enters `attackWindup` with `actionMode = "projectile"`
+  - browser icon captures:
+    - `output/web-game/m70-icons/flashlight-wrench.png`
+    - `output/web-game/m70-icons/flashlight-charm.png`
+    - `output/web-game/m70-icons/state.json`
+    - `output/web-game/m70-icons/console-errors.json`
+    - visually confirmed the active-item icons render above the owning actors with no new console errors
+  - required Playwright helper smoke:
+    - `output/web-game/shot-0.png`
+    - `output/web-game/state-0.json`
+
 ## Milestone 69
 
 - Status: complete

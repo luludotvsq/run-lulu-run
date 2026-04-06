@@ -23,6 +23,7 @@ type ActorKind = ActorBase["kind"];
 
 interface ActorVisual {
   sprite: Phaser.GameObjects.Image;
+  itemIcon: Phaser.GameObjects.Image | null;
   lastX: number;
   lastY: number;
   animElapsedMs: number;
@@ -273,7 +274,7 @@ export class GameScene extends Phaser.Scene {
       this.drawAttackIndicator(springtrap);
     }
 
-    this.drawBoostEffects(state, localRole);
+    this.drawBoostEffects(state, map, viewer, visionRadius, focus.id, localRole);
     this.drawTrackerArrow(state, localRole);
     this.drawFog(map, viewer, visionRadius);
     this.drawFlashOverlay(state, localRole);
@@ -368,6 +369,7 @@ export class GameScene extends Phaser.Scene {
     this.projectileSprites.clear();
 
     for (const actorVisual of this.actorSprites.values()) {
+      actorVisual.itemIcon?.destroy();
       actorVisual.sprite.destroy();
     }
     this.actorSprites.clear();
@@ -391,6 +393,7 @@ export class GameScene extends Phaser.Scene {
     if (!visible) {
       for (const actorVisual of this.actorSprites.values()) {
         actorVisual.sprite.setVisible(false);
+        actorVisual.itemIcon?.setVisible(false);
       }
     }
   }
@@ -596,6 +599,7 @@ export class GameScene extends Phaser.Scene {
       if (!visual) {
         visual = {
           sprite: this.add.image(actor.x, actor.y, this.getActorTextureKey(actor.kind, actor.facing, 0)),
+          itemIcon: null,
           lastX: actor.x,
           lastY: actor.y,
           animElapsedMs: 0,
@@ -638,6 +642,24 @@ export class GameScene extends Phaser.Scene {
       visual.sprite.setAngle(this.getActorSpinAngle(actor));
       this.applyActorTint(visual.sprite, actor, state);
       visual.sprite.setAlpha(this.getActorAlpha(actor, state));
+      const itemTextureKey = this.getActorItemTextureKey(actor, state);
+      if (itemTextureKey) {
+        if (!visual.itemIcon) {
+          visual.itemIcon = this.add.image(actor.x, displayY, itemTextureKey).setOrigin(0.5, 1);
+        }
+        visual.itemIcon.setTexture(itemTextureKey);
+        visual.itemIcon.setDisplaySize(
+          CLIENT_CONFIG.worldVisuals.effectIconSizePx,
+          CLIENT_CONFIG.worldVisuals.effectIconSizePx,
+        );
+        visual.itemIcon.setPosition(actor.x, displayY - actorDisplaySize * 0.42);
+        visual.itemIcon.setDepth(visual.sprite.depth + actorDisplaySize * 0.3);
+        visual.itemIcon.setVisible(visible);
+        visual.itemIcon.setAlpha(visual.sprite.alpha);
+      } else if (visual.itemIcon) {
+        visual.itemIcon.destroy();
+        visual.itemIcon = null;
+      }
       visual.lastFacing = actor.facing;
       visual.lastX = actor.x;
       visual.lastY = actor.y;
@@ -659,6 +681,7 @@ export class GameScene extends Phaser.Scene {
       if (npc.health === "dead" && npc.dissolveRemainingMs <= 0) {
         const visual = this.actorSprites.get(npc.id);
         if (visual) {
+          visual.itemIcon?.destroy();
           visual.sprite.destroy();
           this.actorSprites.delete(npc.id);
         }
@@ -674,6 +697,7 @@ export class GameScene extends Phaser.Scene {
       }
 
       visual.sprite.destroy();
+      visual.itemIcon?.destroy();
       this.actorSprites.delete(id);
     }
   }
@@ -699,8 +723,36 @@ export class GameScene extends Phaser.Scene {
     return CLIENT_CONFIG.worldVisuals.cellSizePx;
   }
 
+  private getActorItemTextureKey(actor: ActorBase, state: MatchState): string | null {
+    if (actor.kind === "lulu") {
+      return state.lulu.flashlightRemainingMs > 0 ? STATIC_TEXTURE_KEYS.pickupFlashlight : null;
+    }
+
+    if (actor.kind !== "springtrap") {
+      return null;
+    }
+
+    const springtrap = state.springtraps.find((entry) => entry.id === actor.id);
+    if (!springtrap) {
+      return null;
+    }
+
+    if (
+      springtrap.heartCharmRemainingMs > 0 &&
+      springtrap.heartCharmRemainingMs >= springtrap.wrenchRemainingMs
+    ) {
+      return STATIC_TEXTURE_KEYS.pickupHeartCharm;
+    }
+
+    if (springtrap.wrenchRemainingMs > 0) {
+      return STATIC_TEXTURE_KEYS.pickupWrench;
+    }
+
+    return null;
+  }
+
   private getActorSpinAngle(actor: ActorBase): number {
-    if (actor.lock.kind !== "flashBlinded") {
+    if (actor.lock.kind !== "flashBlinded" && actor.lock.kind !== "hitSpin") {
       return 0;
     }
 
@@ -709,7 +761,7 @@ export class GameScene extends Phaser.Scene {
       0,
       1,
     );
-    return progress * 720;
+    return progress * (actor.lock.kind === "flashBlinded" ? 720 : 360);
   }
 
   private getActorAlpha(actor: ActorBase, state: MatchState): number {
@@ -902,13 +954,37 @@ export class GameScene extends Phaser.Scene {
     this.graphics.fillRect(x, y, width, height);
   }
 
-  private drawBoostEffects(state: MatchState, localRole: Role): void {
-    if (state.lulu.armorCharges > 0) {
+  private drawBoostEffects(
+    state: MatchState,
+    map: MapData,
+    viewer: { x: number; y: number },
+    visionRadius: number,
+    viewerActorId: string,
+    localRole: Role,
+  ): void {
+    const hideLuluFromFlashedAyu = localRole === "springtrap" && state.springtrap.flashOverlayRemainingMs > 0;
+    const canViewerSeeActorEffect = (actor: ActorBase) => {
+      if (actor.id === viewerActorId) {
+        return true;
+      }
+
+      if (actor.kind === "lulu" && hideLuluFromFlashedAyu) {
+        return false;
+      }
+
+      return canSeePoint(viewer, actor, visionRadius, map.obstacles);
+    };
+
+    if (state.lulu.armorCharges > 0 && canViewerSeeActorEffect(state.lulu)) {
       this.graphics.lineStyle(3, 0xb7ebff, 0.85);
       this.graphics.strokeCircle(state.lulu.x, state.lulu.y, CLIENT_CONFIG.worldVisuals.cellSizePx * 0.62);
     }
 
-    if (state.lulu.flashlightRemainingMs > 0 && state.lulu.flashlightCooldownRemainingMs <= 0) {
+    if (
+      state.lulu.flashlightRemainingMs > 0 &&
+      state.lulu.flashlightCooldownRemainingMs <= 0 &&
+      canViewerSeeActorEffect(state.lulu)
+    ) {
       const rect = this.getForwardEffectRect(
         state.lulu,
         GAME_CONFIG.boosts.flashlightRangePx,
@@ -922,6 +998,9 @@ export class GameScene extends Phaser.Scene {
 
     for (const springtrap of state.springtraps) {
       if (springtrap.heartCharmRemainingMs <= 0 || springtrap.heartCharmCooldownRemainingMs > 0) {
+        continue;
+      }
+      if (!canViewerSeeActorEffect(springtrap)) {
         continue;
       }
       const rect = this.getForwardEffectRect(

@@ -919,6 +919,14 @@ function getNpcById(state: MatchState, npcId: string | null): NpcState | null {
   return state.npcs.find((npc) => npc.id === npcId) ?? null;
 }
 
+function getSpringtrapById(state: MatchState, springtrapId: string | null): SpringtrapState | null {
+  if (!springtrapId) {
+    return null;
+  }
+
+  return state.springtraps.find((springtrap) => springtrap.id === springtrapId) ?? null;
+}
+
 function getGeneratorRepairRate(multiplier = 1): number {
   return multiplier / GAME_CONFIG.generator.repairDurationMs;
 }
@@ -1658,9 +1666,13 @@ function clearSpringtrapCommitDirection(springtrap: SpringtrapState): Direction 
   return previousDirection;
 }
 
-function beginSpringtrapCommit(springtrap: SpringtrapState, direction: Direction): void {
+function beginSpringtrapCommit(
+  springtrap: SpringtrapState,
+  direction: Direction,
+  durationMs: number = getSinglePlayerAiConfig().routeCommitMs,
+): void {
   springtrap.aiCommitDirection = direction;
-  springtrap.aiCommitRemainingMs = getSinglePlayerAiConfig().routeCommitMs;
+  springtrap.aiCommitRemainingMs = durationMs;
   springtrap.aiBlockedCommitFrames = 0;
   springtrap.aiStuckFrames = 0;
   springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
@@ -1819,6 +1831,34 @@ function getPredictedLuluWrenchTarget(
   });
 }
 
+function getWrenchProjectileOrigin(owner: SpringtrapState, facing: Direction = owner.facing): Vec2 {
+  const halfProjectile = GAME_CONFIG.boosts.projectileSizePx * 0.5;
+  const halfOwnerW = owner.collider.w * 0.5;
+  const halfOwnerH = owner.collider.h * 0.5;
+  if (facing === "left") {
+    return {
+      x: owner.x - halfOwnerW - halfProjectile,
+      y: owner.y,
+    };
+  }
+  if (facing === "right") {
+    return {
+      x: owner.x + halfOwnerW + halfProjectile,
+      y: owner.y,
+    };
+  }
+  if (facing === "up") {
+    return {
+      x: owner.x,
+      y: owner.y - halfOwnerH - halfProjectile,
+    };
+  }
+  return {
+    x: owner.x,
+    y: owner.y + halfOwnerH + halfProjectile,
+  };
+}
+
 function buildWrenchAttackRect(killer: SpringtrapState, facing: Direction = killer.facing) {
   const width = GAME_CONFIG.boosts.projectileSizePx;
   const range = GAME_CONFIG.boosts.wrenchProjectileRangePx + width;
@@ -1861,6 +1901,64 @@ function buildWrenchAttackRect(killer: SpringtrapState, facing: Direction = kill
   };
 }
 
+function buildWrenchProjectileLaneRect(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  facing: Direction,
+  luluTarget: Vec2 = state.lulu,
+) {
+  const projectileSize = GAME_CONFIG.boosts.projectileSizePx;
+  const halfProjectile = projectileSize * 0.5;
+  const origin = getWrenchProjectileOrigin(springtrap, facing);
+  const targetRect = centeredRect(luluTarget, state.lulu.collider);
+
+  if (facing === "left") {
+    return {
+      x: targetRect.x + targetRect.w,
+      y: origin.y - halfProjectile,
+      w: Math.max(0, origin.x + halfProjectile - (targetRect.x + targetRect.w)),
+      h: projectileSize,
+    };
+  }
+  if (facing === "right") {
+    return {
+      x: origin.x - halfProjectile,
+      y: origin.y - halfProjectile,
+      w: Math.max(0, targetRect.x - (origin.x - halfProjectile)),
+      h: projectileSize,
+    };
+  }
+  if (facing === "up") {
+    return {
+      x: origin.x - halfProjectile,
+      y: targetRect.y + targetRect.h,
+      w: projectileSize,
+      h: Math.max(0, origin.y + halfProjectile - (targetRect.y + targetRect.h)),
+    };
+  }
+  return {
+    x: origin.x - halfProjectile,
+    y: origin.y - halfProjectile,
+    w: projectileSize,
+    h: Math.max(0, targetRect.y - (origin.y - halfProjectile)),
+  };
+}
+
+function isWrenchProjectileLaneClearForFacing(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  facing: Direction,
+  luluTarget: Vec2 = state.lulu,
+): boolean {
+  const map = getMap(state);
+  const laneRect = buildWrenchProjectileLaneRect(state, springtrap, facing, luluTarget);
+  if (laneRect.w <= 0 || laneRect.h <= 0) {
+    return true;
+  }
+
+  return !map.obstacles.some((obstacle) => intersects(laneRect, obstacle)) && !intersects(laneRect, map.gate);
+}
+
 function getAttackOptionForFacing(
   state: MatchState,
   springtrap: SpringtrapState,
@@ -1896,13 +1994,12 @@ function getWrenchAttackOptionForFacing(
   facing: Direction,
   luluTarget: Vec2 = state.lulu,
 ): AttackOption | null {
-  const maxDistance = getSpringtrapWrenchAttackMaxDistancePx(state, springtrap);
-  if (!canSeePoint(springtrap, luluTarget, maxDistance, getMap(state).obstacles)) {
+  const overlap = getRectOverlapMetrics(buildWrenchAttackRect(springtrap, facing), centeredRect(luluTarget, state.lulu.collider));
+  if (overlap.area <= 0) {
     return null;
   }
 
-  const overlap = getRectOverlapMetrics(buildWrenchAttackRect(springtrap, facing), centeredRect(luluTarget, state.lulu.collider));
-  if (overlap.area <= 0) {
+  if (!isWrenchProjectileLaneClearForFacing(state, springtrap, facing, luluTarget)) {
     return null;
   }
 
@@ -2034,6 +2131,9 @@ function chooseSpringtrapWrenchRepositionMove(
 
     const option = getBestLuluWrenchAttackOption(state, probe.actor as SpringtrapState, luluTarget);
     const nextDistance = distance(probe.destination, luluTarget);
+    if (nextDistance > currentDistance + PROBE_PROGRESS_EPSILON_PX) {
+      continue;
+    }
     const alignmentDistance = Math.min(
       ...CARDINAL_DIRECTIONS.map((facing) => getLuluAlignmentDistance(probe.destination, luluTarget, facing)),
     );
@@ -2043,16 +2143,13 @@ function chooseSpringtrapWrenchRepositionMove(
       nextDistance < GAME_CONFIG.attack.range + TILE_SIZE ? (GAME_CONFIG.attack.range + TILE_SIZE - nextDistance) * 10 : 0;
     const unnecessaryAdvancePenalty =
       currentDistance <= maxAttackDistance && nextDistance < currentDistance ? (currentDistance - nextDistance) * 8 : 0;
-    const retreatBonus =
-      currentDistance < preferredDistance && nextDistance > currentDistance ? (nextDistance - currentDistance) * 5 : 0;
     const score =
       (option?.score ?? 0) +
       inRangeBonus -
       idealDistancePenalty -
       crowdingPenalty -
       unnecessaryAdvancePenalty -
-      alignmentDistance * 2 +
-      retreatBonus;
+      alignmentDistance * 2;
     if (score > bestScore) {
       bestScore = score;
       bestDirection = direction;
@@ -2213,8 +2310,25 @@ function chooseSpringtrapRouteMove(
   }
 
   const excludedDirections: Direction[] = [];
+  const tryBackoffMove = (blockedDirection: Direction | null): Direction | null => {
+    if (!blockedDirection) {
+      return null;
+    }
+
+    const backoffDirection = getOppositeDirection(blockedDirection);
+    if (!canActorProgress(state, springtrap, backoffDirection)) {
+      return null;
+    }
+
+    beginSpringtrapCommit(springtrap, backoffDirection, getSinglePlayerAiConfig().stuckBackoffMs);
+    return backoffDirection;
+  };
   const stuckDirection = updateSpringtrapCommitWindow(springtrap, target);
   if (stuckDirection) {
+    const backoffMove = tryBackoffMove(stuckDirection);
+    if (backoffMove) {
+      return backoffMove;
+    }
     excludedDirections.push(stuckDirection);
   }
 
@@ -2232,6 +2346,10 @@ function chooseSpringtrapRouteMove(
       springtrap.aiBlockedCommitFrames += 1;
       if (springtrap.aiBlockedCommitFrames >= getSinglePlayerAiConfig().blockedCommitFrames) {
         const blockedDirection = clearSpringtrapCommitAndRestartWindow(springtrap);
+        const backoffMove = tryBackoffMove(blockedDirection);
+        if (backoffMove) {
+          return backoffMove;
+        }
         if (blockedDirection) {
           excludedDirections.push(blockedDirection);
         }
@@ -2285,11 +2403,7 @@ function getSpringtrapAiInput(
   const closeContact = distance(springtrap, state.lulu) <= aiConfig.closeContactRadiusPx;
   const repairCueTarget = getRepairCueTarget(state, springtrap);
   const hasStrongRepairCue = repairCueTarget !== null;
-  const predictedLuluAttackTarget = getPredictedLuluAttackTarget(state, luluMoveHint);
   const usingWrench = springtrap.wrenchRemainingMs > 0;
-  const predictedLuluWrenchTarget = usingWrench
-    ? getPredictedLuluWrenchTarget(state, springtrap, luluMoveHint)
-    : predictedLuluAttackTarget;
   const chooseMove = (target: Vec2 | null): Direction | null => {
     return chooseSpringtrapRouteMove(state, springtrap, target, deltaMs, seesLulu);
   };
@@ -2325,8 +2439,11 @@ function getSpringtrapAiInput(
   }
 
   if (springtrap.lock.kind === "none") {
+    const predictedLuluAttackTarget = usingWrench
+      ? getPredictedLuluWrenchTarget(state, springtrap, luluMoveHint)
+      : getPredictedLuluAttackTarget(state, luluMoveHint);
     const attackOption = usingWrench
-      ? getBestLuluWrenchAttackOption(state, springtrap, predictedLuluWrenchTarget)
+      ? getBestLuluWrenchAttackOption(state, springtrap, predictedLuluAttackTarget)
       : getBestLuluAttackOption(state, springtrap, predictedLuluAttackTarget);
     if (attackOption?.clean) {
       springtrap.facing = attackOption.facing;
@@ -2342,7 +2459,7 @@ function getSpringtrapAiInput(
       : GAME_CONFIG.attack.range + TILE_SIZE;
     if (attackOption || distance(springtrap, state.lulu) <= attackPressureDistance) {
       const repositionMove = usingWrench
-        ? chooseSpringtrapWrenchRepositionMove(state, springtrap, predictedLuluWrenchTarget)
+        ? chooseSpringtrapWrenchRepositionMove(state, springtrap, predictedLuluAttackTarget)
         : chooseSpringtrapAttackRepositionMove(state, springtrap, predictedLuluAttackTarget);
       if (repositionMove) {
         return {
@@ -2581,8 +2698,20 @@ function getAttackLockFacing(actor: ActorBase): Direction | null {
   return null;
 }
 
+function canActorMoveWhileLocked(actor: ActorBase): boolean {
+  return (
+    actor.lock.kind === "attackWindup" ||
+    actor.lock.kind === "attackActive" ||
+    actor.lock.kind === "attackRecovery"
+  );
+}
+
 function updateFacing(actor: ActorBase, move: MoveIntent | null): void {
-  if (actor.lock.kind === "flashBlinded") {
+  if (
+    actor.lock.kind === "flashBlinded" ||
+    actor.lock.kind === "hitSpin" ||
+    actor.lock.kind === "hitStunned"
+  ) {
     return;
   }
 
@@ -2881,7 +3010,9 @@ function moveActor(
 ): void {
   updateFacing(actor, move);
 
-  if (!isMoveIntentActive(move) || actor.lock.kind !== "none") {
+  const manualVaultPressed = options.manualVaultPressed ?? false;
+  const effectiveMove = isMoveIntentActive(move) ? move : manualVaultPressed ? moveIntentFromDirection(actor.facing) : null;
+  if (!isMoveIntentActive(effectiveMove) || (actor.lock.kind !== "none" && !canActorMoveWhileLocked(actor))) {
     return;
   }
 
@@ -2895,9 +3026,8 @@ function moveActor(
   const speed = getSpeedForActor(state, actor);
   const delta = speed * (deltaMs / 1_000);
   const allowAutoVault = options.allowAutoVault ?? true;
-  const manualVaultPressed = options.manualVaultPressed ?? false;
 
-  for (const ledgeMove of getMoveIntentDirections(move)) {
+  for (const ledgeMove of getMoveIntentDirections(effectiveMove)) {
     const approachedLedge = getBestApproachLedge(state, actor, ledgeMove);
     if (
       approachedLedge &&
@@ -2908,7 +3038,7 @@ function moveActor(
     }
   }
 
-  const moveComponents = getMoveIntentComponents(move);
+  const moveComponents = getMoveIntentComponents(effectiveMove);
   let deltaX = moveComponents.x * delta;
   let deltaY = moveComponents.y * delta;
   if (moveComponents.x !== 0 && moveComponents.y !== 0) {
@@ -2948,6 +3078,23 @@ function shouldHumanControlledActorVault(
 
 export function canActorManualVaultWithFacing(state: MatchState, actor: ActorBase): boolean {
   return shouldHumanControlledActorVault(state, actor, moveIntentFromDirection(actor.facing), true);
+}
+
+function shouldHumanControlledSpringtrapVault(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  move: MoveIntent | null,
+  actionPressed: boolean,
+): boolean {
+  if (shouldHumanControlledActorVault(state, springtrap, move, actionPressed)) {
+    return true;
+  }
+
+  if (isMoveIntentActive(move) || !actionPressed || springtrap.lock.kind !== "none") {
+    return false;
+  }
+
+  return shouldHumanControlledActorVault(state, springtrap, moveIntentFromDirection(springtrap.facing), true);
 }
 
 function buildAttackRect(killer: SpringtrapState, facing: Direction = killer.facing) {
@@ -3043,6 +3190,10 @@ function applyNpcDamage(state: MatchState, npc: NpcState): void {
     return;
   }
 
+  if (state.luluHealingNpcId === npc.id) {
+    cancelHealing(state);
+  }
+
   if (npc.health === "healthy") {
     npc.health = "injured";
   } else if (npc.health === "injured") {
@@ -3064,33 +3215,61 @@ function applyNpcDamage(state: MatchState, npc: NpcState): void {
   }
 }
 
+function canLuluReceiveSpringtrapHit(state: MatchState): boolean {
+  return state.lulu.health !== "dead" && state.lulu.health !== "escaped" && state.lulu.lock.kind !== "hitSpin";
+}
+
+function canNpcReceiveSpringtrapHit(state: MatchState, npc: NpcState): boolean {
+  return isNpcKillable(state) && isNpcAlive(npc) && npc.lock.kind !== "hitSpin";
+}
+
+function applyVictimHitSpin(actor: ActorBase): void {
+  actor.lock = {
+    kind: "hitSpin",
+    remainingMs: GAME_CONFIG.attack.hitSpinMs,
+    totalMs: GAME_CONFIG.attack.hitSpinMs,
+  };
+}
+
+function applySpringtrapHitStun(springtrap: SpringtrapState): void {
+  const totalMs = GAME_CONFIG.attack.hitSpinMs + GAME_CONFIG.attack.hitStunExtraMs;
+  springtrap.lock = {
+    kind: "hitStunned",
+    remainingMs: totalMs,
+    totalMs,
+  };
+}
+
+function resolveSpringtrapHitOnLulu(state: MatchState, springtrap: SpringtrapState): void {
+  applyLuluDamage(state);
+  applyVictimHitSpin(state.lulu);
+  applySpringtrapHitStun(springtrap);
+}
+
+function resolveSpringtrapHitOnNpc(state: MatchState, springtrap: SpringtrapState, npc: NpcState): boolean {
+  if (!canNpcReceiveSpringtrapHit(state, npc)) {
+    return false;
+  }
+
+  applyNpcDamage(state, npc);
+  applyVictimHitSpin(npc);
+  applySpringtrapHitStun(springtrap);
+  return true;
+}
+
 function createProjectile(
   state: MatchState,
   owner: SpringtrapState,
   facing: Direction = owner.facing,
 ): ProjectileRuntime {
-  const halfProjectile = GAME_CONFIG.boosts.projectileSizePx * 0.5;
-  const halfOwnerW = owner.collider.w * 0.5;
-  const halfOwnerH = owner.collider.h * 0.5;
-  let x = owner.x;
-  let y = owner.y;
-
-  if (facing === "left") {
-    x -= halfOwnerW + halfProjectile;
-  } else if (facing === "right") {
-    x += halfOwnerW + halfProjectile;
-  } else if (facing === "up") {
-    y -= halfOwnerH + halfProjectile;
-  } else {
-    y += halfOwnerH + halfProjectile;
-  }
+  const origin = getWrenchProjectileOrigin(owner, facing);
 
   return {
     id: `projectile-${state.nextProjectileId++}`,
     kind: "wrench",
     ownerId: owner.id,
-    x,
-    y,
+    x: origin.x,
+    y: origin.y,
     facing,
     remainingPx: GAME_CONFIG.boosts.wrenchProjectileRangePx,
   };
@@ -3175,21 +3354,21 @@ function applyAttackHit(state: MatchState, killer: SpringtrapState, attackMode: 
   const attackFacing = getAttackLockFacing(killer) ?? killer.facing;
   const attackRect = buildAttackRect(killer, attackFacing);
 
-  if (state.lulu.health !== "dead" && state.lulu.health !== "escaped") {
+  if (canLuluReceiveSpringtrapHit(state)) {
     const luluRect = centeredRect(state.lulu, state.lulu.collider);
     if (intersects(attackRect, luluRect)) {
-      applyLuluDamage(state);
+      resolveSpringtrapHitOnLulu(state, killer);
       return;
     }
   }
 
   for (const npc of state.npcs) {
-    if (!isNpcAlive(npc)) {
+    if (!canNpcReceiveSpringtrapHit(state, npc)) {
       continue;
     }
 
     if (intersects(attackRect, centeredRect(npc, npc.collider))) {
-      applyNpcDamage(state, npc);
+      resolveSpringtrapHitOnNpc(state, killer, npc);
       return;
     }
   }
@@ -3500,19 +3679,18 @@ function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number):
   }
 
   if (actor.lock.kind === "attackActive") {
+    const attackMode = actor.lock.attackMode;
     if (!actor.lock.hitApplied && actor.kind === "springtrap") {
-      applyAttackHit(state, actor as SpringtrapState, actor.lock.attackMode);
+      applyAttackHit(state, actor as SpringtrapState, attackMode);
+      if (actor.lock.kind !== "attackActive") {
+        return;
+      }
       actor.lock.hitApplied = true;
     }
 
     actor.lock.remainingMs -= deltaMs;
     if (actor.lock.remainingMs <= 0) {
-      actor.lock = {
-        kind: "attackRecovery",
-        remainingMs: GAME_CONFIG.attack.recoveryMs,
-        facing: actor.lock.facing,
-        attackMode: actor.lock.attackMode,
-      };
+      actor.lock = { kind: "none" };
     }
     return;
   }
@@ -3526,6 +3704,14 @@ function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number):
   }
 
   if (actor.lock.kind === "flashBlinded") {
+    actor.lock.remainingMs -= deltaMs;
+    if (actor.lock.remainingMs <= 0) {
+      actor.lock = { kind: "none" };
+    }
+    return;
+  }
+
+  if (actor.lock.kind === "hitSpin" || actor.lock.kind === "hitStunned") {
     actor.lock.remainingMs -= deltaMs;
     if (actor.lock.remainingMs <= 0) {
       actor.lock = { kind: "none" };
@@ -3916,6 +4102,7 @@ function updateProjectiles(state: MatchState, deltaMs: number): void {
   const movedProjectiles: ProjectileRuntime[] = [];
 
   for (const projectile of state.projectiles) {
+    const owner = getSpringtrapById(state, projectile.ownerId);
     const distanceStep = Math.min(
       projectile.remainingPx,
       GAME_CONFIG.boosts.wrenchProjectileSpeedPx * (deltaMs / 1_000),
@@ -3947,20 +4134,20 @@ function updateProjectiles(state: MatchState, deltaMs: number): void {
       continue;
     }
 
-    if (
-      state.lulu.health !== "dead" &&
-      state.lulu.health !== "escaped" &&
-      intersects(rect, centeredRect(state.lulu, state.lulu.collider))
-    ) {
-      applyLuluDamage(state);
+    if (intersects(rect, centeredRect(state.lulu, state.lulu.collider))) {
+      if (owner && canLuluReceiveSpringtrapHit(state)) {
+        resolveSpringtrapHitOnLulu(state, owner);
+      }
       continue;
     }
 
     const hitNpc = state.npcs.find(
-      (npc) => npc.health !== "dead" && intersects(rect, centeredRect(npc, npc.collider)),
+      (npc) => intersects(rect, centeredRect(npc, npc.collider)),
     );
     if (hitNpc) {
-      applyNpcDamage(state, hitNpc);
+      if (owner) {
+        resolveSpringtrapHitOnNpc(state, owner, hitNpc);
+      }
       continue;
     }
 
@@ -4037,7 +4224,7 @@ export function stepMatch(state: MatchState, controls: MatchControls, deltaMs: n
     }
 
     const input = effectiveSpringtrapControls[index];
-    return shouldHumanControlledActorVault(
+    return shouldHumanControlledSpringtrapVault(
       state,
       springtrap,
       input?.move ?? null,

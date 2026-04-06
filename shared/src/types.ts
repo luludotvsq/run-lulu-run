@@ -124,6 +124,8 @@ export type ActorLock =
       knockbackTo: Vec2;
     }
   | { kind: "flashBlinded"; remainingMs: number; totalMs: number }
+  | { kind: "hitSpin"; remainingMs: number; totalMs: number }
+  | { kind: "hitStunned"; remainingMs: number; totalMs: number }
   | { kind: "attackWindup"; remainingMs: number; facing: Direction; attackMode: "melee" | "projectile" }
   | { kind: "attackActive"; remainingMs: number; hitApplied: boolean; facing: Direction; attackMode: "melee" | "projectile" }
   | { kind: "attackRecovery"; remainingMs: number; facing: Direction; attackMode: "melee" | "projectile" }

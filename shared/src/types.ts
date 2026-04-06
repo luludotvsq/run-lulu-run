@@ -196,7 +196,6 @@ export interface SpringtrapState extends ActorBase {
   aiStuckLastPosition: Vec2 | null;
   aiItemCyclePhase: SpringtrapAiItemCyclePhase;
   aiItemCycleRemainingMs: number;
-  aiRepairAmbushCooldownRemainingMs: number;
   trackerDisabledRemainingMs: number;
   flashOverlayRemainingMs: number;
   insideFlashlightZone: boolean;

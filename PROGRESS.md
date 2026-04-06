@@ -2525,3 +2525,60 @@ Original prompt: Build a small browser game prototype with this exact concept an
     - `output/web-game/m85-mobile/ipad-landscape-title.png`
     - `output/web-game/m85-mobile/ipad-landscape-gameplay.png`
     - `output/web-game/m85-mobile/results.json`
+
+## Milestone 86
+
+- Status: complete
+- Single-player repair-start chase cleanup plus mobile end-screen scaling:
+  - removed the single-player repair ambush teleport path, so AYU no longer respawns around LULU when generator repair begins
+  - made repair-start explicitly refresh AYU into chase from her current location, preserving the existing shortest-path routing and normal de-aggro flow
+  - removed the now-dead ambush cooldown/runtime fields and config entries tied to the teleport system
+  - rebuilt the round-end art presentation to match the splash-screen approach:
+    - result art now renders as a full-screen background layer instead of an inline image block
+    - the stats/actions card stays docked and fully visible on short mobile landscape screens
+    - iPhone landscape now shows the win art clearly behind the end-screen card instead of pushing it off-screen
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - ran the built app locally on `http://localhost:3010`
+  - required Playwright smoke reached a live single-player round successfully
+  - custom engine probe confirmed:
+    - `12/12` repair-start scenarios entered `chase` immediately from AYU's current position
+    - worst first-frame AYU movement was `2.85px`, which matches normal movement and shows no teleport jump
+    - simulated second repair-start reacquisition also stayed at normal first-frame movement (`2.85px` max)
+  - custom iPhone landscape result-screen probe confirmed:
+    - the result art loads as the backdrop image
+    - the summary/action card remains fully inside the viewport
+    - the end screen now visually reads like the splash screen, with art owning the screen
+  - probe artifacts:
+    - `output/web-game/m86-ai-probe.json`
+    - `output/web-game/m86-mobile/iphone-landscape-result.png`
+    - `output/web-game/m86-mobile/results.json`
+  - browser smoke artifacts:
+    - `output/web-game/m86-smoke/state-0.json`
+    - `output/web-game/m86-smoke/shot-0.png`
+
+## Milestone 87
+
+- Status: complete
+- End-screen sizing correction for desktop, iPad, and phone:
+  - restored the original centered result-art figure layout for desktop and iPad so the win art no longer fills the whole screen there
+  - kept the phone-only short-landscape treatment, but scoped it to that breakpoint instead of all devices
+  - fixed the short-phone result card so it docks in the lower-right corner at its intended compact size instead of stretching tall
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - ran the built app locally on `http://localhost:3011`
+  - required Playwright smoke reached a live single-player round successfully
+  - custom result-screen viewport probe confirmed:
+    - desktop returns to a centered `620px` art figure with the summary below it
+    - iPad landscape keeps the same centered figure-style presentation
+    - iPhone landscape still uses full-screen fitted art, with a compact `260px x 130px` summary card in the lower-right
+  - probe artifacts:
+    - `output/web-game/m87-results-3/desktop.png`
+    - `output/web-game/m87-results-3/ipad-landscape.png`
+    - `output/web-game/m87-results-3/iphone-landscape.png`
+    - `output/web-game/m87-results-3/results.json`
+  - browser smoke artifacts:
+    - `output/web-game/m87-smoke/state-0.json`
+    - `output/web-game/m87-smoke/shot-0.png`

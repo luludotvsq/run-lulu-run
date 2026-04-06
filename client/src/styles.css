@@ -1195,4 +1195,87 @@ canvas {
     font-size: 7px;
     letter-spacing: 0.08em;
   }
+
+  .result-screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    justify-items: stretch;
+    background:
+      linear-gradient(180deg, rgba(3, 1, 7, 0.18), rgba(3, 1, 7, 0.58)),
+      radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.04), transparent 24%),
+      radial-gradient(circle at 50% 100%, rgba(178, 156, 255, 0.14), transparent 34%),
+      #040108;
+  }
+
+  .result-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(5, 3, 8, 0.08) 0%, rgba(5, 3, 8, 0.02) 20%, rgba(5, 3, 8, 0.28) 56%, rgba(5, 3, 8, 0.82) 100%),
+      linear-gradient(90deg, rgba(5, 3, 8, 0.12) 0%, rgba(5, 3, 8, 0.03) 22%, rgba(5, 3, 8, 0.03) 78%, rgba(5, 3, 8, 0.18) 100%);
+    pointer-events: none;
+  }
+
+  .result-screen-figure,
+  .result-screen-summary {
+    position: relative;
+    z-index: 1;
+  }
+
+  .result-screen-figure {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  .result-screen-art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: none;
+  }
+
+  .result-screen-summary {
+    position: absolute;
+    right: calc(10px + env(safe-area-inset-right));
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: min(34vw, 260px);
+    min-width: 188px;
+    gap: 8px;
+    padding: 10px;
+    background:
+      linear-gradient(180deg, rgba(11, 9, 21, 0.78), rgba(11, 9, 21, 0.54)),
+      rgba(11, 9, 21, 0.46);
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.24),
+      0 0 0 1px rgba(8, 7, 15, 0.44) inset;
+  }
+
+  .result-screen-stats,
+  .result-actions {
+    gap: 6px;
+  }
+
+  .result-stat {
+    gap: 3px;
+    padding: 8px 10px;
+  }
+
+  .result-stat-label {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+
+  .result-stat-value {
+    font-size: clamp(14px, 4.8vh, 22px);
+  }
+
+  .result-notice {
+    font-size: 10px;
+    line-height: 1.2;
+  }
 }

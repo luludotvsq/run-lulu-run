@@ -87,7 +87,6 @@ function createSpringtrapAt(spawn: Vec2, id: string, facing: Direction = "left")
     aiStuckLastPosition: null,
     aiItemCyclePhase: "none_after_heart",
     aiItemCycleRemainingMs: 0,
-    aiRepairAmbushCooldownRemainingMs: 0,
     trackerDisabledRemainingMs: 0,
     flashOverlayRemainingMs: 0,
     insideFlashlightZone: false,
@@ -883,60 +882,6 @@ function hasWalkDistanceAtLeast(
   }
 
   return true;
-}
-
-function buildWalkDistanceField(
-  map: MapData,
-  target: Vec2,
-  grid = getWalkGrid(map),
-  tieBreakerPoint: Vec2 | null = null,
-): Int32Array | null {
-  const goal = findNearestWalkableTile(map, target, 8, grid, tieBreakerPoint);
-  if (!goal) {
-    return null;
-  }
-
-  const totalTiles = grid.width * grid.height;
-  const distances = new Int32Array(totalTiles);
-  distances.fill(-1);
-  const queue = new Int32Array(totalTiles);
-  const goalIndex = getTileIndex(grid, goal.tileX, goal.tileY);
-  let head = 0;
-  let tail = 0;
-  queue[tail] = goalIndex;
-  tail += 1;
-  distances[goalIndex] = 0;
-
-  while (head < tail) {
-    const currentIndex = queue[head];
-    head += 1;
-    const currentTileX = currentIndex % grid.width;
-    const currentTileY = Math.floor(currentIndex / grid.width);
-    const currentDistance = distances[currentIndex];
-    const neighbors = [
-      { tileX: currentTileX + 1, tileY: currentTileY },
-      { tileX: currentTileX - 1, tileY: currentTileY },
-      { tileX: currentTileX, tileY: currentTileY + 1 },
-      { tileX: currentTileX, tileY: currentTileY - 1 },
-    ];
-
-    for (const neighbor of neighbors) {
-      if (!isWalkableTile(grid, neighbor.tileX, neighbor.tileY)) {
-        continue;
-      }
-
-      const neighborIndex = getTileIndex(grid, neighbor.tileX, neighbor.tileY);
-      if (distances[neighborIndex] !== -1) {
-        continue;
-      }
-
-      distances[neighborIndex] = currentDistance + 1;
-      queue[tail] = neighborIndex;
-      tail += 1;
-    }
-  }
-
-  return distances;
 }
 
 function pickRandomDirection(): Direction {
@@ -1757,134 +1702,7 @@ function getRepairCueTarget(state: MatchState, springtrap: SpringtrapState): Vec
   return distance(springtrap, generator) <= getSinglePlayerAiConfig().repairCueRadiusPx ? generator : null;
 }
 
-function getSpringtrapRepairAmbushSpawn(state: MatchState, springtrap: SpringtrapState): Vec2 | null {
-  const map = getMap(state);
-  const aiConfig = getSinglePlayerAiConfig();
-  const luluVisionRadius = getVisionRadius("lulu");
-  const walkGrid = getSpringtrapWalkGrid(map);
-  const luluDistanceField = buildWalkDistanceField(map, state.lulu, walkGrid, springtrap);
-  const blockedPoints = [
-    { x: state.lulu.x, y: state.lulu.y },
-    ...state.generators.map((generator) => ({ x: generator.x, y: generator.y })),
-    ...state.npcs.filter((npc) => isNpcAlive(npc)).map((npc) => ({ x: npc.x, y: npc.y })),
-    ...state.springtraps
-      .filter((otherSpringtrap) => otherSpringtrap.id !== springtrap.id)
-      .map((otherSpringtrap) => ({ x: otherSpringtrap.x, y: otherSpringtrap.y })),
-  ];
-  const candidates: Vec2[] = [];
-  const addCandidate = (candidate: Vec2): void => {
-    const distanceToLulu = distance(candidate, state.lulu);
-    if (
-      distanceToLulu < aiConfig.repairAmbushMinSpawnDistancePx ||
-      distanceToLulu > aiConfig.repairAmbushMaxSpawnDistancePx
-    ) {
-      return;
-    }
-
-    if (canSeePoint(state.lulu, candidate, luluVisionRadius, map.obstacles)) {
-      return;
-    }
-
-    if (!isSpawnPointClear(map, candidate, springtrap.collider)) {
-      return;
-    }
-
-    if (blockedPoints.some((entry) => distance(entry, candidate) < TILE_SIZE * 2)) {
-      return;
-    }
-
-    if (luluDistanceField) {
-      const candidateTile = findNearestWalkableTile(map, candidate, 0, walkGrid, state.lulu);
-      if (!candidateTile) {
-        return;
-      }
-      const candidateIndex = getTileIndex(walkGrid, candidateTile.tileX, candidateTile.tileY);
-      if (luluDistanceField[candidateIndex] === -1) {
-        return;
-      }
-    }
-
-    candidates.push(candidate);
-  };
-  const sampledTileKeys = new Set<string>();
-  const preferredRadii = [256, 288, 320, 352, 384, aiConfig.repairAmbushMaxSpawnDistancePx];
-  const preferredAngles = Array.from({ length: 16 }, (_, index) => (Math.PI * 2 * index) / 16);
-
-  for (const radius of preferredRadii) {
-    for (const angle of preferredAngles) {
-      const sampleX = state.lulu.x + Math.cos(angle) * radius;
-      const sampleY = state.lulu.y + Math.sin(angle) * radius;
-      const tileX = clamp(
-        Math.round((sampleX - TILE_SIZE * 0.5) / TILE_SIZE),
-        0,
-        walkGrid.width - 1,
-      );
-      const tileY = clamp(
-        Math.round((sampleY - TILE_SIZE * 0.5) / TILE_SIZE),
-        0,
-        walkGrid.height - 1,
-      );
-      const tileKey = `${tileX},${tileY}`;
-      if (sampledTileKeys.has(tileKey)) {
-        continue;
-      }
-      sampledTileKeys.add(tileKey);
-      if (!isWalkableTile(walkGrid, tileX, tileY)) {
-        continue;
-      }
-      addCandidate(tileCenter(tileX, tileY));
-    }
-  }
-
-  if (candidates.length > 0) {
-    return (
-      [...candidates].sort((left, right) => {
-        const leftTile = findNearestWalkableTile(map, left, 0, walkGrid, state.lulu);
-        const rightTile = findNearestWalkableTile(map, right, 0, walkGrid, state.lulu);
-        const leftPathDistance =
-          leftTile && luluDistanceField
-            ? luluDistanceField[getTileIndex(walkGrid, leftTile.tileX, leftTile.tileY)]
-            : -1;
-        const rightPathDistance =
-          rightTile && luluDistanceField
-            ? luluDistanceField[getTileIndex(walkGrid, rightTile.tileX, rightTile.tileY)]
-            : -1;
-        const normalizedLeftPathDistance = leftPathDistance === -1 ? Number.MAX_SAFE_INTEGER : leftPathDistance;
-        const normalizedRightPathDistance =
-          rightPathDistance === -1 ? Number.MAX_SAFE_INTEGER : rightPathDistance;
-        if (normalizedLeftPathDistance !== normalizedRightPathDistance) {
-          return normalizedLeftPathDistance - normalizedRightPathDistance;
-        }
-        return distance(left, state.lulu) - distance(right, state.lulu);
-      })[0] ?? null
-    );
-  }
-
-  for (let tileY = 0; tileY < walkGrid.height; tileY += 1) {
-    for (let tileX = 0; tileX < walkGrid.width; tileX += 1) {
-      if (!isWalkableTile(walkGrid, tileX, tileY)) {
-        continue;
-      }
-
-      addCandidate(tileCenter(tileX, tileY));
-    }
-  }
-
-  return (
-    [...candidates].sort((left, right) => {
-      const leftDistance = distance(left, state.lulu);
-      const rightDistance = distance(right, state.lulu);
-      const leftHiddenByObstacle = leftDistance <= luluVisionRadius ? 0 : 1;
-      const rightHiddenByObstacle = rightDistance <= luluVisionRadius ? 0 : 1;
-      if (leftHiddenByObstacle !== rightHiddenByObstacle) {
-        return leftHiddenByObstacle - rightHiddenByObstacle;
-      }
-      return leftDistance - rightDistance;
-    })[0] ?? null
-  );
-}
-
-function maybeTriggerSpringtrapRepairAmbush(state: MatchState, previousRepairingGeneratorId: string | null): void {
+function maybeRefreshSpringtrapRepairChase(state: MatchState, previousRepairingGeneratorId: string | null): void {
   if (state.mode !== "single") {
     return;
   }
@@ -1894,25 +1712,8 @@ function maybeTriggerSpringtrapRepairAmbush(state: MatchState, previousRepairing
     return;
   }
 
-  const aiConfig = getSinglePlayerAiConfig();
   for (const springtrap of state.springtraps) {
-    if (springtrap.aiRepairAmbushCooldownRemainingMs > 0 || springtrap.lock.kind !== "none") {
-      continue;
-    }
-
-    if (distance(springtrap, state.lulu) < aiConfig.repairAmbushMinDistancePx) {
-      continue;
-    }
-
-    const ambushSpawn = getSpringtrapRepairAmbushSpawn(state, springtrap);
-    if (!ambushSpawn) {
-      continue;
-    }
-
-    springtrap.x = ambushSpawn.x;
-    springtrap.y = ambushSpawn.y;
-    springtrap.facing = getFacingToward(ambushSpawn, state.lulu);
-    springtrap.aiRepairAmbushCooldownRemainingMs = aiConfig.repairAmbushCooldownMs;
+    springtrap.facing = getFacingToward(springtrap, state.lulu);
     enterChase(state, springtrap, state.lulu);
   }
 }
@@ -4457,7 +4258,6 @@ function updateBoosts(state: MatchState, deltaMs: number): void {
   state.lulu.charmRecoveryRemainingMs = Math.max(0, state.lulu.charmRecoveryRemainingMs - deltaMs);
 
   for (const springtrap of state.springtraps) {
-    springtrap.aiRepairAmbushCooldownRemainingMs = Math.max(0, springtrap.aiRepairAmbushCooldownRemainingMs - deltaMs);
     springtrap.trackerDisabledRemainingMs = Math.max(0, springtrap.trackerDisabledRemainingMs - deltaMs);
     springtrap.flashOverlayRemainingMs = Math.max(0, springtrap.flashOverlayRemainingMs - deltaMs);
     springtrap.heartCharmRemainingMs = Math.max(0, springtrap.heartCharmRemainingMs - deltaMs);
@@ -4631,7 +4431,7 @@ export function stepMatch(state: MatchState, controls: MatchControls, deltaMs: n
   updateNpcDissolves(state, deltaMs);
   updateBoosts(state, deltaMs);
   updateLuluRepairCue(state, controls);
-  maybeTriggerSpringtrapRepairAmbush(state, previousRepairingGeneratorId);
+  maybeRefreshSpringtrapRepairChase(state, previousRepairingGeneratorId);
 
   if (state.result !== "running") {
     return;

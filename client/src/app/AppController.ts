@@ -23,11 +23,13 @@ export class AppController {
   private readonly debugWindow = window as DebugWindow;
   private readonly uiState: UiState;
   private readonly touchControls: TouchControlsController;
+  private readonly touchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
   private overlaySignature = "";
   private lastObservedSession = gameRuntime.getSession();
   private wasRoundRunning = false;
   private completedRounds = 0;
   private mobileGestureGuardsInstalled = false;
+  private orientationLockInFlight = false;
   private lastTouchEndMs = 0;
 
   public constructor(appRoot: HTMLDivElement, appTitle = APP_TITLE) {
@@ -48,6 +50,7 @@ export class AppController {
 
   public start(): void {
     this.installMobileGestureGuards();
+    void this.requestLandscapeOrientation();
     this.renderOverlay();
     gameRuntime.subscribe(() => {
       this.overlaySignature = "";
@@ -87,6 +90,20 @@ export class AppController {
     document.addEventListener("gesturestart", blockEvent, { passive: false });
     document.addEventListener("gesturechange", blockEvent, { passive: false });
     document.addEventListener("gestureend", blockEvent, { passive: false });
+    document.addEventListener(
+      "pointerdown",
+      () => {
+        void this.requestLandscapeOrientation();
+      },
+      { passive: true },
+    );
+    document.addEventListener(
+      "touchstart",
+      () => {
+        void this.requestLandscapeOrientation();
+      },
+      { passive: true },
+    );
     document.addEventListener(
       "touchmove",
       (event: TouchEvent) => {
@@ -132,30 +149,57 @@ export class AppController {
     const state = session?.getState() ?? null;
     const waiting = info?.waiting ?? false;
     const roundRunning = Boolean(session && state && state.result === "running" && !waiting);
+    const portraitBlocked = this.shouldBlockPortraitOrientation();
     if (this.wasRoundRunning && state && state.result !== "running") {
       this.completedRounds += 1;
       this.audio.setGameplayTrackIndex(this.completedRounds);
     }
     this.wasRoundRunning = roundRunning;
-    const touchControlsVisible = this.touchControls.setGameplayActive(roundRunning);
+    const touchControlsVisible = this.touchControls.setGameplayActive(roundRunning && !portraitBlocked);
     this.layout.hud.root.classList.toggle("hud-overlay-mobile-controls", touchControlsVisible);
     const blindedByFlash =
       (session?.getLocalRole() ?? null) === "springtrap" &&
       (state?.springtrap.flashOverlayRemainingMs ?? 0) > 0;
     this.layout.hud.root.classList.toggle("blinded-ui", blindedByFlash);
     this.layout.touchControls.root.classList.toggle("blinded-ui", blindedByFlash);
-    if (!roundRunning) {
+    if (!roundRunning || portraitBlocked) {
       gameInput.reset();
     }
     syncHud(
       this.layout.hud,
-      state && !waiting && state.result === "running" ? state : null,
+      state && !waiting && state.result === "running" && !portraitBlocked ? state : null,
       state ? session?.getLocalRole() ?? "lulu" : null,
       this.debugAi,
     );
     this.audio.setCue(this.resolveMusicCue());
     window.requestAnimationFrame(this.syncUiLoop);
   };
+
+  private shouldBlockPortraitOrientation(): boolean {
+    return this.touchDevice && window.innerHeight > window.innerWidth;
+  }
+
+  private async requestLandscapeOrientation(): Promise<void> {
+    if (!this.touchDevice || this.orientationLockInFlight) {
+      return;
+    }
+
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (orientation: "landscape" | "portrait") => Promise<void>;
+    };
+    if (!orientation.lock) {
+      return;
+    }
+
+    this.orientationLockInFlight = true;
+    try {
+      await orientation.lock("landscape");
+    } catch {
+      // Browsers like mobile Safari ignore orientation lock outside supported contexts.
+    } finally {
+      this.orientationLockInFlight = false;
+    }
+  }
 
   private resolveMusicCue(): MusicCue {
     const session = gameRuntime.getSession();
@@ -240,6 +284,11 @@ export class AppController {
     const info = session?.getInfo() ?? null;
     const state = session?.getState() ?? null;
 
+    if (this.shouldBlockPortraitOrientation()) {
+      this.renderRotateOverlay();
+      return;
+    }
+
     if (!session) {
       this.renderMenuOverlay();
       return;
@@ -261,6 +310,18 @@ export class AppController {
     }
 
     this.layout.overlayRoot.innerHTML = "";
+  }
+
+  private renderRotateOverlay(): void {
+    this.layout.overlayRoot.innerHTML = `
+      <div class="orientation-lock-screen">
+        <div class="orientation-lock-card">
+          <p class="menu-kicker">Landscape Only</p>
+          <h2>Rotate Your Device</h2>
+          <p class="status-copy">Run, Lulu, Run plays in landscape so the map stays front and center.</p>
+        </div>
+      </div>
+    `;
   }
 
   private renderMenuOverlay(): void {
@@ -550,6 +611,7 @@ export class AppController {
       result: state?.result ?? "none",
       round: state?.roundNumber ?? 0,
       isHost: info?.isHost ?? true,
+      portraitBlocked: this.shouldBlockPortraitOrientation(),
     });
   }
 }

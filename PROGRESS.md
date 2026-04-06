@@ -2447,3 +2447,56 @@ Original prompt: Build a small browser game prototype with this exact concept an
   - browser artifacts:
     - `output/web-game/m82-smoke/state-0.json`
     - `output/web-game/m82-smoke/shot-0.png`
+
+## Milestone 83
+
+- Status: complete
+- Phone-first mobile presentation, landscape-only lockout, and audio visibility pause:
+  - added a touch-device portrait lock overlay so phones and iPads launch into a landscape-only presentation instead of trying to run the round in portrait
+  - retried browser orientation locking on touch input instead of only attempting once, so supported mobile browsers can still honor the landscape request after user interaction
+  - tightened the short-height phone landscape HUD, prompt, and touch-control sizing so the gameplay layer stays dominant and the text chrome shrinks down to iPad-like scale
+  - switched short-height phone landscape canvas presentation from height-fit letterboxing to width-cover cropping, which removes the giant side gutters and gives the map the screen back
+  - paused music when the page becomes hidden or unloads, and resumed it only when the page becomes visible again
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - required Playwright smoke reached a live single-player round successfully
+  - custom Playwright mobile probe confirmed:
+    - portrait iPhone view shows the landscape-only rotate overlay
+    - short landscape phone view fills the width with map-first framing and much smaller HUD/touch controls
+    - iPad landscape view keeps the larger iPad framing intact
+    - dispatched `pagehide` flips `audio.currentTrackPaused` to `true`
+    - dispatched `pageshow` restores `audio.currentTrackPaused` to `false`
+  - probe artifacts:
+    - `output/web-game/m83-mobile/phone-portrait.png`
+    - `output/web-game/m83-mobile/phone-landscape.png`
+    - `output/web-game/m83-mobile/ipad-landscape.png`
+    - `output/web-game/m83-mobile/phone-landscape.json`
+  - browser smoke artifacts:
+    - `output/web-game/m83-mobile/smoke-2/state-0.json`
+    - `output/web-game/m83-mobile/smoke-2/shot-0.png`
+
+## Milestone 84
+
+- Status: complete
+- Single-player AYU chase pressure restoration:
+  - restored committed chase routing to use true line-of-sight instead of treating repair/item cues like direct sight, so AYU keeps taking real route commits and can stay sticky around corners again
+  - re-enabled the existing stuck backoff path during chase, which lets AYU break out of in-place corner stutter instead of endlessly walking inside one blocked tile
+  - added a single-player repair-start ambush: when LULU begins repairing and AYU is far away, AYU can respawn on a nearby walkable tile that is hidden by fog/out-of-view and immediately enter chase
+  - tightened the ambush chooser so it samples a local ring around LULU first and ranks candidates by actual walk-path distance, avoiding hidden spawn spots that looked close on paper but still took too long to pressure
+  - lowered the ambush trigger distance from `512px` to `384px` and tightened the spawn band to `224px`-`416px` so AYU shows up quickly again without spawning right on top of LULU
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic AI probe confirmed:
+    - all `20/20` sampled repair-start scenarios reached visible chase pressure within `2.5s`
+    - all `20/20` sampled repair-start scenarios reached close pressure within `1.5s`
+    - worst sampled repair visibility time was `1200ms`
+    - worst sampled repair close time was `1016.7ms`
+    - worst sampled far-chase no-progress window was one frame (`16.7ms`)
+  - required Playwright smoke reached a live single-player round successfully
+  - probe artifacts:
+    - `output/web-game/m84-ambush-sticky-probe.json`
+  - browser smoke artifacts:
+    - `output/web-game/m84-smoke-2/state-0.json`
+    - `output/web-game/m84-smoke-2/shot-0.png`

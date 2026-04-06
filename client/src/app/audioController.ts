@@ -34,6 +34,7 @@ export class AudioController {
   private gameplayTrackIndex = 0;
   private unlocked = false;
   private applyRequestId = 0;
+  private pageActive = document.visibilityState === "visible";
 
   public constructor() {
     this.audio.loop = true;
@@ -46,6 +47,28 @@ export class AudioController {
     window.addEventListener("pointerdown", handleUserGesture, { passive: true });
     window.addEventListener("touchstart", handleUserGesture, { passive: true });
     window.addEventListener("keydown", handleUserGesture);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible") {
+        this.pageActive = false;
+        this.pauseForInvisibility();
+        return;
+      }
+
+      this.pageActive = true;
+      void this.resumeIfAllowed();
+    });
+    window.addEventListener("pagehide", () => {
+      this.pageActive = false;
+      this.pauseForInvisibility();
+    });
+    window.addEventListener("beforeunload", () => {
+      this.pageActive = false;
+      this.pauseForInvisibility();
+    });
+    window.addEventListener("pageshow", () => {
+      this.pageActive = document.visibilityState === "visible";
+      void this.resumeIfAllowed();
+    });
   }
 
   public isUnlocked(): boolean {
@@ -62,7 +85,7 @@ export class AudioController {
 
   public setCue(cue: MusicCue): void {
     if (cue === this.currentCue) {
-      if (cue !== "none" && this.unlocked && this.audio.paused) {
+      if (cue !== "none" && this.unlocked && this.pageActive && this.audio.paused) {
         void this.applyCue(cue);
       }
       return;
@@ -104,7 +127,7 @@ export class AudioController {
       return;
     }
 
-    if (this.currentCue !== "none" && this.audio.paused) {
+    if (this.currentCue !== "none" && this.pageActive && this.audio.paused) {
       await this.applyCue(this.currentCue);
     }
   }
@@ -122,7 +145,7 @@ export class AudioController {
   }
 
   private async applyCue(cue: MusicCue): Promise<void> {
-    if (!this.unlocked) {
+    if (!this.unlocked || !this.pageActive) {
       return;
     }
 
@@ -160,5 +183,17 @@ export class AudioController {
       // Ignore reset failures from browsers that have not loaded the media yet.
     }
     this.currentTrackSource = null;
+  }
+
+  private pauseForInvisibility(): void {
+    this.audio.pause();
+  }
+
+  private async resumeIfAllowed(): Promise<void> {
+    if (!this.unlocked || !this.pageActive || this.currentCue === "none") {
+      return;
+    }
+
+    await this.applyCue(this.currentCue);
   }
 }

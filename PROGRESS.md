@@ -2500,3 +2500,28 @@ Original prompt: Build a small browser game prototype with this exact concept an
   - browser smoke artifacts:
     - `output/web-game/m84-smoke-2/state-0.json`
     - `output/web-game/m84-smoke-2/shot-0.png`
+
+## Milestone 85
+
+- Status: complete
+- iPhone-specific short-landscape presentation pass:
+  - added a stricter phone-only landscape layout breakpoint so iPhones no longer fall back to the larger desktop title composition
+  - shrank the splash logo panel and action panel on short landscape phones so the `1 Player`, `2 Players`, and `Join Game` buttons stay fully reachable on iPhone Safari
+  - kept iPad and desktop presentation rules unchanged by targeting only coarse-pointer landscape screens with very short viewport heights
+  - made the in-round phone HUD much lighter and less intrusive:
+    - HUD pills now use much smaller text, tighter spacing, and a faint translucent background
+    - the prompt box is reduced to a small low-priority caption instead of a large gameplay-blocking panel
+    - touch controls are scaled down again so the map keeps visual priority
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - custom Playwright mobile probe confirmed:
+    - iPhone landscape title screen keeps all three primary menu buttons on-screen and clickable
+    - iPhone landscape gameplay shows a much smaller translucent HUD with the map as the dominant visual
+    - iPad landscape title and gameplay remain in the larger tablet presentation
+  - probe artifacts:
+    - `output/web-game/m85-mobile/iphone-landscape-title.png`
+    - `output/web-game/m85-mobile/iphone-landscape-gameplay.png`
+    - `output/web-game/m85-mobile/ipad-landscape-title.png`
+    - `output/web-game/m85-mobile/ipad-landscape-gameplay.png`
+    - `output/web-game/m85-mobile/results.json`

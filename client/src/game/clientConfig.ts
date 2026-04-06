@@ -7,6 +7,10 @@ export const CLIENT_CONFIG = {
     displayTitle: "Run, Lulu, Run",
     titleDisplayLines: ["Run,", "LULU,", "Run"],
     titleSplashImage: `${ASSET_PUBLIC_ROOT}/ui/title-splash.jpg`,
+    roundResultArt: {
+      ayuWin: `${ASSET_PUBLIC_ROOT}/ui/results/ayu-win.png`,
+      luluWin: `${ASSET_PUBLIC_ROOT}/ui/results/lulu-win.png`,
+    },
     audioHint: "Audio starts after your first input.",
   },
   presentation: {

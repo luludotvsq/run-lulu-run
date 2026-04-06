@@ -263,3 +263,38 @@
 ### Cleanup note
 
 - Because the runtime copies now exist inside the project, the original external source PNGs are no longer required by the build.
+
+## Winner Art And Gate Refresh - 2026-04-05
+
+### New copied runtime result assets
+
+- The supplied winner artwork was copied into the project at:
+  - [client/public/game-assets/ui/results/ayu-win.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/ui/results/ayu-win.png)
+  - [client/public/game-assets/ui/results/lulu-win.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/ui/results/lulu-win.png)
+
+### Source files used for the copies
+
+- `D:\iCloudDrive\Drawing\Untitled_Artwork.png`
+- `D:\iCloudDrive\Drawing\Untitled_Artwork 2.png`
+
+### Result-screen mapping notes
+
+- `ayu-win.png` is shown when AYU wins the round.
+- `lulu-win.png` is shown when LULU wins the round.
+- The winner artwork stays image-led, while the timer, repaired generator count, and replay/title buttons remain live UI layered over the art instead of being baked into the PNGs.
+
+### Refreshed runtime gate assets
+
+- The runtime gate textures were replaced in place at:
+  - [client/public/game-assets/environment/interactables/gate/closed.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/gate/closed.png)
+  - [client/public/game-assets/environment/interactables/gate/open.png](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/gate/open.png)
+
+### Gate replacement sources
+
+- `D:\iCloudDrive\Drawing\IMG_3508 2.png`
+- `D:\iCloudDrive\Drawing\IMG_3508.png`
+
+### Mapping assumptions
+
+- The gate files were replaced in place so the rest of the runtime asset wiring and map references did not need to change.
+- Because the runtime copies now exist inside the project, the original external artwork files are no longer required by the build.

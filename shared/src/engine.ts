@@ -76,6 +76,7 @@ function createSpringtrapAt(spawn: Vec2, id: string, facing: Direction = "left")
     aiSearchWaypointIndex: 0,
     aiSearchWaypoints: [],
     aiDistractionNpcId: null,
+    aiPriorityChestId: null,
     aiCommitDirection: null,
     aiCommitRemainingMs: 0,
     aiBlockedCommitFrames: 0,
@@ -259,6 +260,7 @@ function createNpcs(mapId: string): NpcState[] {
     ),
     targetGeneratorId: null,
     healChargesRemaining: 1,
+    dissolveRemainingMs: 0,
   }));
 }
 
@@ -430,6 +432,47 @@ function canNpcHealLulu(state: MatchState, npc: NpcState): boolean {
   const canHeal =
     state.mode === "multiplayer" ? getMultiplayerNpcConfig().canHealLulu : getSinglePlayerNpcConfig().canHealLulu;
   return canHeal && isNpcAlive(npc) && npc.healChargesRemaining > 0;
+}
+
+function springtrapHasActiveItem(springtrap: SpringtrapState): boolean {
+  return springtrap.heartCharmRemainingMs > 0 || springtrap.wrenchRemainingMs > 0;
+}
+
+function chooseVisibleSpringtrapChest(state: MatchState, springtrap: SpringtrapState): TreasureChestRuntime | null {
+  const map = getMap(state);
+  const visibleChests = state.chests.filter(
+    (chest) => chest.state === "closed" && canSeePoint(springtrap, chest, getVisionRadius("springtrap"), map.obstacles),
+  );
+  if (visibleChests.length === 0) {
+    return null;
+  }
+
+  return [...visibleChests].sort((left, right) => distance(springtrap, left) - distance(springtrap, right))[0] ?? null;
+}
+
+function getSpringtrapPriorityChest(state: MatchState, springtrap: SpringtrapState): TreasureChestRuntime | null {
+  if (state.mode !== "single" || springtrapHasActiveItem(springtrap)) {
+    springtrap.aiPriorityChestId = null;
+    return null;
+  }
+
+  if (springtrap.lock.kind === "openingChest") {
+    const { chestId } = springtrap.lock;
+    const openingChest =
+      state.chests.find((chest) => chest.id === chestId && chest.state === "closed") ?? null;
+    springtrap.aiPriorityChestId = openingChest?.id ?? null;
+    return openingChest;
+  }
+
+  const committedChest =
+    state.chests.find((chest) => chest.id === springtrap.aiPriorityChestId && chest.state === "closed") ?? null;
+  if (committedChest) {
+    return committedChest;
+  }
+
+  const visibleChest = chooseVisibleSpringtrapChest(state, springtrap);
+  springtrap.aiPriorityChestId = visibleChest?.id ?? null;
+  return visibleChest;
 }
 
 function shouldAllowNpcDistraction(state: MatchState, aiState: SpringtrapAiState): boolean {
@@ -1676,6 +1719,7 @@ function enterHunt(springtrap: SpringtrapState): void {
   springtrap.aiSearchWaypointIndex = 0;
   springtrap.aiSearchWaypoints = [];
   springtrap.aiDistractionNpcId = null;
+  springtrap.aiPriorityChestId = null;
   resetSpringtrapCommitState(springtrap);
 }
 
@@ -1686,6 +1730,7 @@ function enterChase(state: MatchState, springtrap: SpringtrapState, point: Vec2 
   springtrap.aiSearchWaypointIndex = 0;
   springtrap.aiSearchWaypoints = [];
   springtrap.aiDistractionNpcId = null;
+  springtrap.aiPriorityChestId = null;
   resetSpringtrapCommitState(springtrap);
   rememberConfirmedLulu(springtrap, state.lulu, point);
 }
@@ -1703,6 +1748,7 @@ function enterSearch(state: MatchState, springtrap: SpringtrapState): void {
     getSpringtrapWalkGrid(getMap(state)),
   );
   springtrap.aiDistractionNpcId = null;
+  springtrap.aiPriorityChestId = null;
   resetSpringtrapCommitState(springtrap);
 }
 
@@ -1713,6 +1759,7 @@ function enterCooldown(state: MatchState, springtrap: SpringtrapState): void {
   springtrap.aiSearchWaypointIndex = 0;
   springtrap.aiSearchWaypoints = [];
   springtrap.aiDistractionNpcId = null;
+  springtrap.aiPriorityChestId = null;
   springtrap.aiHuntTarget = pickRoamTarget(state);
   resetSpringtrapCommitState(springtrap);
 }
@@ -1739,6 +1786,79 @@ function getPredictedLuluAttackTarget(state: MatchState, luluMoveHint: Direction
   return projectActorMove(state, state.lulu, luluMoveHint, predictionMs, {
     allowAutoVault: false,
   });
+}
+
+function getSpringtrapWrenchAttackMaxDistancePx(state: MatchState, springtrap: SpringtrapState): number {
+  return (
+    GAME_CONFIG.boosts.wrenchProjectileRangePx +
+    Math.max(springtrap.collider.w, springtrap.collider.h) * 0.5 +
+    GAME_CONFIG.boosts.projectileSizePx * 0.5 +
+    Math.max(state.lulu.collider.w, state.lulu.collider.h) * 0.5
+  );
+}
+
+function getPredictedLuluWrenchTarget(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  luluMoveHint: Direction | null,
+): Vec2 {
+  if (!luluMoveHint) {
+    return { x: state.lulu.x, y: state.lulu.y };
+  }
+
+  const projectileTravelPx = Math.max(
+    0,
+    distance(springtrap, state.lulu) -
+      Math.max(springtrap.collider.w, springtrap.collider.h) * 0.5 -
+      GAME_CONFIG.boosts.projectileSizePx * 0.5,
+  );
+  const predictionMs =
+    GAME_CONFIG.attack.windupMs + (projectileTravelPx / GAME_CONFIG.boosts.wrenchProjectileSpeedPx) * 1_000;
+  return projectActorMove(state, state.lulu, luluMoveHint, predictionMs, {
+    allowAutoVault: false,
+  });
+}
+
+function buildWrenchAttackRect(killer: SpringtrapState, facing: Direction = killer.facing) {
+  const width = GAME_CONFIG.boosts.projectileSizePx;
+  const range = GAME_CONFIG.boosts.wrenchProjectileRangePx + width;
+  const halfWidth = width * 0.5;
+  const halfKillerW = killer.collider.w * 0.5;
+  const halfKillerH = killer.collider.h * 0.5;
+
+  if (facing === "left") {
+    return {
+      x: killer.x - halfKillerW - range,
+      y: killer.y - halfWidth,
+      w: range,
+      h: width,
+    };
+  }
+
+  if (facing === "right") {
+    return {
+      x: killer.x + halfKillerW,
+      y: killer.y - halfWidth,
+      w: range,
+      h: width,
+    };
+  }
+
+  if (facing === "up") {
+    return {
+      x: killer.x - halfWidth,
+      y: killer.y - halfKillerH - range,
+      w: width,
+      h: range,
+    };
+  }
+
+  return {
+    x: killer.x - halfWidth,
+    y: killer.y + halfKillerH,
+    w: width,
+    h: range,
+  };
 }
 
 function getAttackOptionForFacing(
@@ -1770,6 +1890,36 @@ function getAttackOptionForFacing(
   };
 }
 
+function getWrenchAttackOptionForFacing(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  facing: Direction,
+  luluTarget: Vec2 = state.lulu,
+): AttackOption | null {
+  const maxDistance = getSpringtrapWrenchAttackMaxDistancePx(state, springtrap);
+  if (!canSeePoint(springtrap, luluTarget, maxDistance, getMap(state).obstacles)) {
+    return null;
+  }
+
+  const overlap = getRectOverlapMetrics(buildWrenchAttackRect(springtrap, facing), centeredRect(luluTarget, state.lulu.collider));
+  if (overlap.area <= 0) {
+    return null;
+  }
+
+  const perpendicularOverlap = facing === "left" || facing === "right" ? overlap.overlapY : overlap.overlapX;
+  const clean =
+    perpendicularOverlap >= getSinglePlayerAiConfig().attackMinPerpendicularOverlapPx &&
+    overlap.area >= getSinglePlayerAiConfig().attackMinOverlapAreaPx;
+
+  return {
+    facing,
+    overlapArea: overlap.area,
+    perpendicularOverlap,
+    clean,
+    score: overlap.area * 5 + perpendicularOverlap * 48 + (clean ? 10_000 : 0),
+  };
+}
+
 function getBestLuluAttackOption(
   state: MatchState,
   springtrap: SpringtrapState,
@@ -1785,6 +1935,33 @@ function getBestLuluAttackOption(
 
   for (const facing of uniqueDirections([primary, secondary, ...CARDINAL_DIRECTIONS])) {
     const option = getAttackOptionForFacing(state, springtrap, facing, luluTarget);
+    if (!option) {
+      continue;
+    }
+
+    if (!bestOption || option.score > bestOption.score) {
+      bestOption = option;
+    }
+  }
+
+  return bestOption;
+}
+
+function getBestLuluWrenchAttackOption(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  luluTarget: Vec2 = state.lulu,
+): AttackOption | null {
+  const dx = luluTarget.x - springtrap.x;
+  const dy = luluTarget.y - springtrap.y;
+  const primary: Direction =
+    Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? "right" : "left") : dy >= 0 ? "down" : "up";
+  const secondary: Direction =
+    primary === "left" || primary === "right" ? (dy >= 0 ? "down" : "up") : dx >= 0 ? "right" : "left";
+  let bestOption: AttackOption | null = null;
+
+  for (const facing of uniqueDirections([primary, secondary, ...CARDINAL_DIRECTIONS])) {
+    const option = getWrenchAttackOptionForFacing(state, springtrap, facing, luluTarget);
     if (!option) {
       continue;
     }
@@ -1828,6 +2005,54 @@ function chooseSpringtrapAttackRepositionMove(
       distanceGain * 32 -
       bestAlignmentDistance * 2 +
       (distanceGain > 0 ? TILE_SIZE : -TILE_SIZE * 2);
+    if (score > bestScore) {
+      bestScore = score;
+      bestDirection = direction;
+    }
+  }
+
+  return bestDirection;
+}
+
+function chooseSpringtrapWrenchRepositionMove(
+  state: MatchState,
+  springtrap: SpringtrapState,
+  luluTarget: Vec2 = state.lulu,
+): Direction | null {
+  const currentOption = getBestLuluWrenchAttackOption(state, springtrap, luluTarget);
+  const currentDistance = distance(springtrap, luluTarget);
+  const maxAttackDistance = getSpringtrapWrenchAttackMaxDistancePx(state, springtrap);
+  const preferredDistance = Math.max(GAME_CONFIG.attack.range + TILE_SIZE, maxAttackDistance * 0.72);
+  let bestDirection: Direction | null = null;
+  let bestScore = currentOption?.score ?? -Infinity;
+
+  for (const direction of CARDINAL_DIRECTIONS) {
+    const probe = probeActorMove(state, springtrap, direction);
+    if (!probe.madeProgress) {
+      continue;
+    }
+
+    const option = getBestLuluWrenchAttackOption(state, probe.actor as SpringtrapState, luluTarget);
+    const nextDistance = distance(probe.destination, luluTarget);
+    const alignmentDistance = Math.min(
+      ...CARDINAL_DIRECTIONS.map((facing) => getLuluAlignmentDistance(probe.destination, luluTarget, facing)),
+    );
+    const inRangeBonus = nextDistance <= maxAttackDistance ? TILE_SIZE * 2 : -TILE_SIZE * 2;
+    const idealDistancePenalty = Math.abs(nextDistance - preferredDistance) * 2.25;
+    const crowdingPenalty =
+      nextDistance < GAME_CONFIG.attack.range + TILE_SIZE ? (GAME_CONFIG.attack.range + TILE_SIZE - nextDistance) * 10 : 0;
+    const unnecessaryAdvancePenalty =
+      currentDistance <= maxAttackDistance && nextDistance < currentDistance ? (currentDistance - nextDistance) * 8 : 0;
+    const retreatBonus =
+      currentDistance < preferredDistance && nextDistance > currentDistance ? (nextDistance - currentDistance) * 5 : 0;
+    const score =
+      (option?.score ?? 0) +
+      inRangeBonus -
+      idealDistancePenalty -
+      crowdingPenalty -
+      unnecessaryAdvancePenalty -
+      alignmentDistance * 2 +
+      retreatBonus;
     if (score > bestScore) {
       bestScore = score;
       bestDirection = direction;
@@ -2061,9 +2286,48 @@ function getSpringtrapAiInput(
   const repairCueTarget = getRepairCueTarget(state, springtrap);
   const hasStrongRepairCue = repairCueTarget !== null;
   const predictedLuluAttackTarget = getPredictedLuluAttackTarget(state, luluMoveHint);
+  const usingWrench = springtrap.wrenchRemainingMs > 0;
+  const predictedLuluWrenchTarget = usingWrench
+    ? getPredictedLuluWrenchTarget(state, springtrap, luluMoveHint)
+    : predictedLuluAttackTarget;
+  const chooseMove = (target: Vec2 | null): Direction | null => {
+    return chooseSpringtrapRouteMove(state, springtrap, target, deltaMs, seesLulu);
+  };
+  const priorityChest = getSpringtrapPriorityChest(state, springtrap);
+
+  if (priorityChest && springtrap.lock.kind === "openingChest") {
+    return {
+      move: null,
+      actionPressed: false,
+      actionHeld: true,
+    };
+  }
+
+  if (priorityChest && springtrap.lock.kind === "none") {
+    if (distance(springtrap, priorityChest) <= GAME_CONFIG.treasure.interactRange) {
+      return {
+        move: null,
+        actionPressed: false,
+        actionHeld: true,
+      };
+    }
+
+    const chestMove = chooseMove(priorityChest);
+    if (chestMove) {
+      return {
+        move: moveIntentFromDirection(chestMove),
+        actionPressed: false,
+        actionHeld: false,
+      };
+    }
+
+    springtrap.aiPriorityChestId = null;
+  }
 
   if (springtrap.lock.kind === "none") {
-    const attackOption = getBestLuluAttackOption(state, springtrap, predictedLuluAttackTarget);
+    const attackOption = usingWrench
+      ? getBestLuluWrenchAttackOption(state, springtrap, predictedLuluWrenchTarget)
+      : getBestLuluAttackOption(state, springtrap, predictedLuluAttackTarget);
     if (attackOption?.clean) {
       springtrap.facing = attackOption.facing;
       return {
@@ -2073,8 +2337,13 @@ function getSpringtrapAiInput(
       };
     }
 
-    if (attackOption || distance(springtrap, state.lulu) <= GAME_CONFIG.attack.range + TILE_SIZE) {
-      const repositionMove = chooseSpringtrapAttackRepositionMove(state, springtrap, predictedLuluAttackTarget);
+    const attackPressureDistance = usingWrench
+      ? getSpringtrapWrenchAttackMaxDistancePx(state, springtrap)
+      : GAME_CONFIG.attack.range + TILE_SIZE;
+    if (attackOption || distance(springtrap, state.lulu) <= attackPressureDistance) {
+      const repositionMove = usingWrench
+        ? chooseSpringtrapWrenchRepositionMove(state, springtrap, predictedLuluWrenchTarget)
+        : chooseSpringtrapAttackRepositionMove(state, springtrap, predictedLuluAttackTarget);
       if (repositionMove) {
         return {
           move: moveIntentFromDirection(repositionMove),
@@ -2084,10 +2353,6 @@ function getSpringtrapAiInput(
       }
     }
   }
-
-  const chooseMove = (target: Vec2 | null): Direction | null => {
-    return chooseSpringtrapRouteMove(state, springtrap, target, deltaMs, seesLulu);
-  };
 
   const getCommittedDistractionTarget = (): NpcState | null => {
     if (!shouldAllowNpcDistraction(state, springtrap.aiState)) {
@@ -2787,6 +3052,7 @@ function applyNpcDamage(state: MatchState, npc: NpcState): void {
     npc.wanderDirection = null;
     npc.decisionRemainingMs = 0;
     npc.lock = { kind: "none" };
+    npc.dissolveRemainingMs = getMultiplayerNpcConfig().dissolveMs;
   }
 
   if (!isNpcAlive(npc)) {
@@ -2843,6 +3109,7 @@ function grantChestReward(state: MatchState, opener: ActorBase): ChestReward {
 
   const reward: ChestReward = Math.random() >= 0.5 ? "heart_charm" : "wrench";
   const springtrap = opener as SpringtrapState;
+  springtrap.aiPriorityChestId = null;
   if (reward === "heart_charm") {
     springtrap.heartCharmRemainingMs = GAME_CONFIG.boosts.heartCharmDurationMs;
   } else {
@@ -2856,7 +3123,9 @@ function getDynamicPlacementPoints(state: MatchState, extraPoints: Vec2[] = []):
     ...state.generators.map((generator) => ({ x: generator.x, y: generator.y })),
     { x: state.lulu.x, y: state.lulu.y },
     ...state.springtraps.map((springtrap) => ({ x: springtrap.x, y: springtrap.y })),
-    ...state.npcs.map((npc) => ({ x: npc.x, y: npc.y })),
+    ...state.npcs
+      .filter((npc) => isNpcAlive(npc) || npc.dissolveRemainingMs > 0)
+      .map((npc) => ({ x: npc.x, y: npc.y })),
     ...state.chests.map((chest) => ({ x: chest.x, y: chest.y })),
     ...extraPoints,
   ];
@@ -2927,7 +3196,9 @@ function applyAttackHit(state: MatchState, killer: SpringtrapState, attackMode: 
 }
 
 function findNearbyUprightPallet(state: MatchState): PalletRuntime | undefined {
-  return state.pallets.find((pallet) => pallet.state === "upright" && distance(state.lulu, pallet) <= 28);
+  return state.pallets.find(
+    (pallet) => pallet.state === "upright" && distance(state.lulu, pallet) <= GAME_CONFIG.pallet.interactRangePx,
+  );
 }
 
 function findNearbyRepairableGenerator(state: MatchState, actor: Vec2): GeneratorData | undefined {
@@ -3094,7 +3365,10 @@ function finishPalletDrop(state: MatchState, palletId: string): void {
   };
   let hitSpringtrap = false;
   for (const springtrap of state.springtraps) {
-    if (intersects(expandedZone, centeredRect(springtrap, springtrap.collider))) {
+    if (
+      intersects(expandedZone, centeredRect(springtrap, springtrap.collider)) ||
+      distance(springtrap, pallet) <= GAME_CONFIG.pallet.hitRangePx
+    ) {
       hitSpringtrap = true;
       const knockbackTo = getSpringtrapPalletKnockbackDestination(state, springtrap);
       springtrap.lock = {
@@ -3553,6 +3827,16 @@ function updateTreasureChests(state: MatchState, deltaMs: number): void {
   }
 }
 
+function updateNpcDissolves(state: MatchState, deltaMs: number): void {
+  for (const npc of state.npcs) {
+    if (npc.health !== "dead" || npc.dissolveRemainingMs <= 0) {
+      continue;
+    }
+
+    npc.dissolveRemainingMs = Math.max(0, npc.dissolveRemainingMs - deltaMs);
+  }
+}
+
 function updateBoosts(state: MatchState, deltaMs: number): void {
   state.lulu.flashlightRemainingMs = Math.max(0, state.lulu.flashlightRemainingMs - deltaMs);
   state.lulu.flashlightCooldownRemainingMs = Math.max(0, state.lulu.flashlightCooldownRemainingMs - deltaMs);
@@ -3720,6 +4004,7 @@ export function stepMatch(state: MatchState, controls: MatchControls, deltaMs: n
   }
   updatePalletRespawns(state, deltaMs);
   updateTreasureChests(state, deltaMs);
+  updateNpcDissolves(state, deltaMs);
   updateBoosts(state, deltaMs);
 
   if (state.result !== "running") {

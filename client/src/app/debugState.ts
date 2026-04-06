@@ -97,6 +97,7 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       aiState: state.springtrap.aiState,
       aiStateRemainingMs: roundValue(state.springtrap.aiStateRemainingMs),
       aiChaseSightLossMs: roundValue(state.springtrap.aiChaseSightLossMs),
+      priorityChestId: state.springtrap.aiPriorityChestId,
       trackerDisabledRemainingMs: roundValue(state.springtrap.trackerDisabledRemainingMs),
       flashOverlayRemainingMs: roundValue(state.springtrap.flashOverlayRemainingMs),
       heartCharmRemainingMs: roundValue(state.springtrap.heartCharmRemainingMs),
@@ -137,6 +138,7 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       aiMode: npc.aiMode,
       targetGeneratorId: npc.targetGeneratorId,
       healChargesRemaining: npc.healChargesRemaining,
+      dissolveRemainingMs: roundValue(npc.dissolveRemainingMs),
       visible: canSeePoint(viewer, npc, radius, map.obstacles),
     })),
     pallets: state.pallets.map((pallet) => ({

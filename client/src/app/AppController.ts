@@ -1,4 +1,4 @@
-import { APP_TITLE, getMapById } from "@shared/index.js";
+import { APP_TITLE } from "@shared/index.js";
 import type { MatchState, Role } from "@shared/types.js";
 import { createGame } from "../game/createGame.js";
 import { CLIENT_CONFIG } from "../game/clientConfig.js";
@@ -9,9 +9,8 @@ import { refreshMapCatalog, primeMapCatalog } from "../game/mapCatalog.js";
 import { gameRuntime } from "../game/runtime.js";
 import { AudioController, type MusicCue } from "./audioController.js";
 import { buildTextStatePayload } from "./debugState.js";
-import { getRoleDisplayName } from "./displayNames.js";
 import { createAppLayout, type AppLayout } from "./createAppLayout.js";
-import { getStateSummary, syncHud } from "./hud.js";
+import { syncHud } from "./hud.js";
 import { TouchControlsController } from "./touchControls.js";
 import type { DebugWindow, PendingAction, UiState } from "./types.js";
 
@@ -222,6 +221,18 @@ export class AppController {
 
   private queryOverlay<T extends Element>(selector: string): T | null {
     return this.layout.overlayRoot.querySelector<T>(selector);
+  }
+
+  private formatRoundDuration(elapsedMs: number): string {
+    const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1_000));
+    const hours = Math.floor(totalSeconds / 3_600);
+    const minutes = Math.floor((totalSeconds % 3_600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
   private renderOverlay(): void {
@@ -454,22 +465,31 @@ export class AppController {
   }
 
   private renderRoundEndOverlay(state: MatchState, localRole: Role, mode: "single" | "multiplayer"): void {
-    const map = getMapById(state.mapId);
-    const localRoleLabel = getRoleDisplayName(localRole);
-    const localWon =
-      (localRole === "lulu" && state.result === "lulu_win") ||
-      (localRole === "springtrap" && state.result === "springtrap_win");
+    const completedGenerators = state.generators.filter((generator) => generator.completed).length;
+    const winnerArt =
+      state.result === "springtrap_win"
+        ? CLIENT_CONFIG.branding.roundResultArt.ayuWin
+        : CLIENT_CONFIG.branding.roundResultArt.luluWin;
+    const winnerAlt = state.result === "springtrap_win" ? "AYU win art" : "LULU win art";
 
     this.layout.overlayRoot.innerHTML = `
-      <div class="menu-screen result-screen">
-        <div class="menu-panel">
-          <p class="menu-kicker">${localWon ? "Round Won" : "Round Lost"}</p>
-          <h2>${localWon ? "Play Again?" : "Round Over"}</h2>
-          <p class="status-copy">Map: ${map.name} | Role: ${localRoleLabel}</p>
-          <p class="status-copy">${localWon ? "You won the round." : "You lost the round."}</p>
-          <p class="status-copy">${getStateSummary(state)}</p>
-          ${this.uiState.notice ? `<p class="status-copy">${this.uiState.notice}</p>` : ""}
-          <div class="action-stack title-actions-stack">
+      <div class="result-screen">
+        <figure class="result-screen-figure">
+          <img class="result-screen-art" src="${winnerArt}" alt="${winnerAlt}" />
+        </figure>
+        <div class="result-screen-summary">
+          <div class="result-screen-stats">
+            <div class="result-stat">
+              <span class="result-stat-label">Timer</span>
+              <strong class="result-stat-value">${this.formatRoundDuration(state.elapsedMs)}</strong>
+            </div>
+            <div class="result-stat">
+              <span class="result-stat-label">Generators Repaired</span>
+              <strong class="result-stat-value">${completedGenerators} / ${state.generators.length}</strong>
+            </div>
+          </div>
+          ${this.uiState.notice ? `<p class="result-notice">${this.uiState.notice}</p>` : ""}
+          <div class="result-actions">
             ${
               mode === "multiplayer"
                 ? '<button class="action-button" id="play-again-btn">Play Again</button>'

@@ -81,6 +81,7 @@ export class GameScene extends Phaser.Scene {
 
   private graphics!: Phaser.GameObjects.Graphics;
   private fogGraphics!: Phaser.GameObjects.Graphics;
+  private worldOverlayGraphics!: Phaser.GameObjects.Graphics;
   private uiGraphics!: Phaser.GameObjects.Graphics;
   private currentMapId: string | null = null;
   private gateSprite: Phaser.GameObjects.Image | null = null;
@@ -120,6 +121,7 @@ export class GameScene extends Phaser.Scene {
   public create(): void {
     this.graphics = this.add.graphics();
     this.fogGraphics = this.add.graphics();
+    this.worldOverlayGraphics = this.add.graphics().setDepth(19_500);
     this.uiGraphics = this.add.graphics().setScrollFactor(0).setDepth(20_000);
     this.cameras.main.roundPixels = true;
     this.applyTextureFilters();
@@ -219,6 +221,7 @@ export class GameScene extends Phaser.Scene {
 
     this.graphics.clear();
     this.fogGraphics.clear();
+    this.worldOverlayGraphics.clear();
     this.uiGraphics.clear();
     this.graphics.fillStyle(0x070c12, 1);
     this.graphics.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -255,18 +258,12 @@ export class GameScene extends Phaser.Scene {
     this.syncActorVisuals(state, map, viewer, visionRadius, localRole, deltaMs);
 
     this.graphics.clear();
+    this.worldOverlayGraphics.clear();
     this.uiGraphics.clear();
     this.drawLedges(map);
     this.drawGenerators(state, map, viewer, visionRadius);
     this.drawHealingProgress(state);
     this.drawChestOpeningProgress(state, map, viewer, visionRadius);
-
-    for (const npc of state.npcs) {
-      if (!canSeePoint(viewer, npc, visionRadius, map.obstacles) || npc.health !== "dead") {
-        continue;
-      }
-      this.drawNpcCorpse(npc);
-    }
 
     for (const springtrap of state.springtraps) {
       if (localRole !== "springtrap" && !canSeePoint(viewer, springtrap, visionRadius, map.obstacles)) {
@@ -633,12 +630,14 @@ export class GameScene extends Phaser.Scene {
         visual.sprite.setTexture(textureKey);
       }
       const actorDisplaySize = this.getActorDisplaySize();
+      const displayY = actor.y + this.getActorVerticalOffset(actor, state);
       visual.sprite.setDisplaySize(actorDisplaySize, actorDisplaySize);
-      visual.sprite.setPosition(actor.x, actor.y);
-      visual.sprite.setDepth(actor.y + actorDisplaySize * 0.18);
+      visual.sprite.setPosition(actor.x, displayY);
+      visual.sprite.setDepth(displayY + actorDisplaySize * 0.18);
       visual.sprite.setVisible(visible);
       visual.sprite.setAngle(this.getActorSpinAngle(actor));
       this.applyActorTint(visual.sprite, actor, state);
+      visual.sprite.setAlpha(this.getActorAlpha(actor, state));
       visual.lastFacing = actor.facing;
       visual.lastX = actor.x;
       visual.lastY = actor.y;
@@ -657,12 +656,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     for (const npc of state.npcs) {
-      const visual = this.actorSprites.get(npc.id);
-      if (npc.health === "dead") {
+      if (npc.health === "dead" && npc.dissolveRemainingMs <= 0) {
+        const visual = this.actorSprites.get(npc.id);
         if (visual) {
-          visual.sprite.setVisible(false);
+          visual.sprite.destroy();
+          this.actorSprites.delete(npc.id);
         }
-        liveIds.add(npc.id);
         continue;
       }
 
@@ -710,7 +709,37 @@ export class GameScene extends Phaser.Scene {
       0,
       1,
     );
-    return progress * 360;
+    return progress * 720;
+  }
+
+  private getActorAlpha(actor: ActorBase, state: MatchState): number {
+    if (actor.kind !== "npc") {
+      return 1;
+    }
+
+    const npc = state.npcs.find((entry) => entry.id === actor.id);
+    if (!npc || npc.health !== "dead") {
+      return 1;
+    }
+
+    return Phaser.Math.Clamp(
+      npc.dissolveRemainingMs / Math.max(1, GAME_CONFIG.multiplayer.npc.dissolveMs),
+      0,
+      1,
+    );
+  }
+
+  private getActorVerticalOffset(actor: ActorBase, state: MatchState): number {
+    if (actor.kind !== "npc") {
+      return 0;
+    }
+
+    const npc = state.npcs.find((entry) => entry.id === actor.id);
+    if (!npc || npc.health !== "dead") {
+      return 0;
+    }
+
+    return -(1 - this.getActorAlpha(actor, state)) * 12;
   }
 
   private applyActorTint(sprite: Phaser.GameObjects.Image, actor: ActorBase, state: MatchState): void {
@@ -728,6 +757,10 @@ export class GameScene extends Phaser.Scene {
 
     if (actor.kind === "npc") {
       const npc = state.npcs.find((entry) => entry.id === actor.id);
+      if (npc?.health === "dead") {
+        sprite.setTint(0xffe3ff);
+        return;
+      }
       if (npc?.health === "injured") {
         sprite.setTint(0xffd6b0);
       }
@@ -822,21 +855,11 @@ export class GameScene extends Phaser.Scene {
       const y = chest.y - CLIENT_CONFIG.worldVisuals.chestSizePx * 0.95;
       const progress = Phaser.Math.Clamp(opening.progress, 0, 1);
 
-      this.graphics.fillStyle(0x12161d, 0.92);
-      this.graphics.fillRect(x - 1, y - 1, width + 2, height + 2);
-      this.graphics.fillStyle(0xffcc5c, 1);
-      this.graphics.fillRect(x, y, width * progress, height);
+      this.worldOverlayGraphics.fillStyle(0x12161d, 0.92);
+      this.worldOverlayGraphics.fillRect(x - 1, y - 1, width + 2, height + 2);
+      this.worldOverlayGraphics.fillStyle(0xffcc5c, 1);
+      this.worldOverlayGraphics.fillRect(x, y, width * progress, height);
     }
-  }
-
-  private drawNpcCorpse(actor: { x: number; y: number }): void {
-    const x = actor.x - 8;
-    const y = actor.y - 4;
-    this.graphics.fillStyle(0x5e4f40, 0.9);
-    this.graphics.fillRoundedRect(x, y, 16, 8, 3);
-    this.graphics.lineStyle(2, 0x20160f, 0.65);
-    this.graphics.lineBetween(x + 1, y + 1, x + 15, y + 7);
-    this.graphics.lineBetween(x + 15, y + 1, x + 1, y + 7);
   }
 
   private drawAttackIndicator(springtrap: MatchState["springtrap"]): void {

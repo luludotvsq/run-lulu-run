@@ -2,6 +2,60 @@
 
 Original prompt: Build a small browser game prototype with this exact concept and scope. Use Phaser 3 + TypeScript + Vite for the client, Node.js + Socket.IO for the server, keep one repo with separate client and server folders, create SPEC.md / PLAN.md / PROGRESS.md first, then implement milestone by milestone with validation and progress updates after each milestone.
 
+## Milestone 69
+
+- Status: complete
+- Follow-up AI combat fix:
+  - single-player AYU now treats the wrench as a real ranged weapon instead of continuing to collapse to melee spacing whenever LULU is already sitting in a clean firing lane
+  - added a dedicated wrench shot-lane evaluation and ranged reposition scoring path inside the shared AYU AI so projectile attacks prefer open line-of-sight lanes and better standoff spacing
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probe:
+    - `output/web-game/m69-wrench-ai.json`
+    - confirmed that with wrench active and LULU already in a clear horizontal firing lane at `72px`, AI AYU stayed at the same position and entered `attackWindup` with `actionMode = "projectile"` instead of stepping closer first
+
+## Milestone 57
+
+- Status: complete
+- Scope reset before implementation:
+  - replace the round-end screen with supplied winner art and only the timer, repaired generator count, and replay/title actions
+  - swap the gate closed/open runtime art with the newly supplied drawings
+  - make pallet interaction and pallet stun ranges more forgiving
+  - double AYU's flashlight blind duration and spin animation
+  - move chest-opening progress above nearby world-object overlap
+  - make multiplayer NPCs killable with a dissolve-out death presentation
+  - make single-player AYU prioritize visible treasure chests only while she has no active item
+- Intake/setup completed before code changes:
+  - copied supplied round-end winner art into [client/public/game-assets/ui/results](/D:/DEAD%20BY%20LULU/client/public/game-assets/ui/results)
+  - replaced the runtime gate textures in [client/public/game-assets/environment/interactables/gate](/D:/DEAD%20BY%20LULU/client/public/game-assets/environment/interactables/gate)
+- Completed implementation:
+  - replaced the old round-end summary card with a minimal winner-art result screen that only shows the round timer, repaired generator count, and `Play Again` / `Back To Title` actions
+  - wired the supplied AYU-win and LULU-win artwork through client config so the round-end screen swaps art by result state without bringing back extra dashboard-style copy
+  - widened pallet interaction and pallet-hit checks to `1.25` tiles so LULU can drop from one tile away and AYU still gets stunned when standing within one tile of the pallet drop
+  - doubled AYU's flashlight blind window from `320ms` to `640ms` and updated the client spin presentation to rotate through `720` degrees during the blind
+  - moved treasure-chest opening progress into a higher world-overlay layer so nearby walls or other objects no longer cover the progress bar
+  - kept NPCs unkillable in single-player, but made multiplayer NPCs killable by AYU melee/projectile hits and added a dissolve-out death presentation with config-backed timing
+  - added single-player AYU chest-priority tracking so visible treasure chests are pursued only while AYU has no active item, then chase resumes after pickup
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - ran the app locally with the dev server on `http://127.0.0.1:3001` and the client on `http://127.0.0.1:5175`
+  - ran the required Playwright helper against the live client:
+    - screenshot: `output/web-game/shot-0.png`
+    - state: `output/web-game/state-0.json`
+    - confirmed live single-player debug state showed AYU committing to a visible chest via `priorityChestId`
+  - ran focused browser UI checks:
+    - result screens: `output/web-game/m57-ui/ayu-win.png`, `output/web-game/m57-ui/lulu-win.png`, `output/web-game/m57-ui/result-summary.json`
+    - gate art: `output/web-game/m57-browser/gate-closed.png`, `output/web-game/m57-browser/gate-open.png`
+    - chest overlay fix: `output/web-game/m57-browser/chest-progress-overlap.png`, `output/web-game/m57-browser/chest-progress-overlap-crop.png`
+  - ran deterministic engine verification:
+    - `output/web-game/m57-engine/results.json`
+    - confirmed pallet drops can start from one tile away and still stun AYU
+    - confirmed flashlight blind duration now resolves to `640ms`
+    - confirmed single-player NPCs stay unharmed while multiplayer NPCs die on the second hit and dissolve from `883.33ms` down to `0`
+    - confirmed unarmed single-player AYU commits to a visible chest, while armed AYU keeps chasing instead of opening a chest
+
 ## Milestone 54
 
 - Status: complete

@@ -52,7 +52,9 @@ export const GAME_CONFIG = {
   },
   pallet: {
     dropStartupMs: 80,
+    interactRangePx: TILE_SIZE * 1.25,
     stunMs: 1_100,
+    hitRangePx: TILE_SIZE * 1.25,
     knockbackMs: 180,
     knockbackDistancePx: TILE_SIZE * 3,
     downedVisibleMs: 5_000,
@@ -74,7 +76,7 @@ export const GAME_CONFIG = {
     flashlightRangePx: TILE_SIZE * 2,
     flashlightWidthPx: TILE_SIZE * 0.9,
     trackerDisableMs: 5_000,
-    screenFlashMs: 320,
+    screenFlashMs: 640,
     effectHitCooldownMs: 5_000,
     heartCharmDurationMs: 30_000,
     heartCharmRangePx: TILE_SIZE * 5,
@@ -144,6 +146,7 @@ export const GAME_CONFIG = {
       killable: true,
       maxHealthStates: 2,
       canHealLulu: true,
+      dissolveMs: 900,
     },
   },
 } as const;

@@ -1,5 +1,29 @@
 # Run, Lulu, Run Plan
 
+## Milestone 57 - Result screen simplification, gate art swap, interaction forgiveness, and AYU item priority
+
+- Replace the round-end overlay with a minimal winner-art presentation:
+  - show the supplied winner image only
+  - show only round timer, repaired generator count, and the existing replay/title actions
+  - avoid dashboard-like copy and framed summary text
+- Copy the supplied gate closed/open art into the organized runtime intake path and preserve crisp nearest-neighbor rendering.
+- Make pallet interaction and pallet stun detection more forgiving:
+  - allow LULU to trigger a nearby pallet from about one tile away
+  - stun AYU when she is within about one tile of the dropped pallet
+- Double the AYU flashlight blind duration and make the blind spin complete two rotations.
+- Keep treasure-chest opening progress readable when nearby objects overlap above the chest.
+- Allow multiplayer NPCs to be killed and dissolve away after death, while single-player AYU behavior still ignores NPCs and hunts LULU.
+- Update single-player AYU item logic so:
+  - she prioritizes visible treasure chests whenever she has no active item
+  - she opens only one item at a time
+  - she resumes chasing LULU after securing an item
+- Validation:
+  - run `npm run typecheck`
+  - run `npm run build`
+  - run the app locally
+  - run the Playwright loop and inspect screenshots/state for the new result screen and gameplay changes
+  - update `PROGRESS.md`
+
 ## Milestone 45 - Audit and docs reset
 
 - Inspect the current codebase and document the current structure for:

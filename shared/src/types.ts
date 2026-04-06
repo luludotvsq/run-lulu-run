@@ -164,6 +164,7 @@ export interface SpringtrapState extends ActorBase {
   aiSearchWaypointIndex: number;
   aiSearchWaypoints: Vec2[];
   aiDistractionNpcId: string | null;
+  aiPriorityChestId: string | null;
   aiCommitDirection: Direction | null;
   aiCommitRemainingMs: number;
   aiBlockedCommitFrames: number;
@@ -185,6 +186,7 @@ export interface NpcState extends ActorBase {
   decisionRemainingMs: number;
   targetGeneratorId: string | null;
   healChargesRemaining: number;
+  dissolveRemainingMs: number;
 }
 
 export interface PalletRuntime {

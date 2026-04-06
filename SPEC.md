@@ -13,6 +13,16 @@
   - feature/presentation pass
 - Preserve the working build through both phases.
 
+## Current Requested Pass
+
+- Replace the current round-end overlay with a minimal winner-art result screen.
+- Swap in the newly supplied gate closed/open art through the existing runtime intake path.
+- Make pallet drop interaction and pallet stun detection more forgiving at roughly one tile of distance.
+- Double AYU's flashlight blind duration and make the blind spin animate through two full rotations.
+- Keep chest-opening progress bars visible above nearby world objects.
+- Allow multiplayer NPCs to be killed and dissolve away after death.
+- Update single-player AYU chest logic so she prioritizes visible treasure chests only when she has no active item, then resumes hunting LULU.
+
 ## Current Baseline Audit
 
 ### 1. Rendering and camera

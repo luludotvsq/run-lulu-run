@@ -102,7 +102,9 @@ export function getHudPrompt(state: MatchState, role: Role): string {
   }
 
   const nearbyUprightPallet = state.pallets.some(
-    (pallet) => pallet.state === "upright" && Math.hypot(state.lulu.x - pallet.x, state.lulu.y - pallet.y) <= 28,
+    (pallet) =>
+      pallet.state === "upright" &&
+      Math.hypot(state.lulu.x - pallet.x, state.lulu.y - pallet.y) <= GAME_CONFIG.pallet.interactRangePx,
   );
   if (nearbyUprightPallet) {
     return `Use ${actionLabel} to drop the nearby pallet.`;

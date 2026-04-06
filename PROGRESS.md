@@ -2184,3 +2184,266 @@ Original prompt: Build a small browser game prototype with this exact concept an
 - Validation:
   - `npm run typecheck`
   - `npm run build`
+
+## Milestone 69
+
+- Status: complete
+- AYU tracking and hit-spin escape tuning:
+  - restored stronger AI pressure toward visible generator-repair cues so AYU resumes closing in instead of lingering in attack/reposition logic
+  - allowed LULU to keep moving while in the post-hit spin lock, which gives the escape window more real distance
+  - kept the rest of the hit-stun and attack handling unchanged
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - local browser smoke confirmed the client still boots cleanly
+  - browser artifact:
+    - `output/web-game/m73-smoke/shot-0.png`
+
+## Milestone 70
+
+- Status: complete
+- AYU repair pursuit override:
+  - changed generator-repair awareness back into a hard chase override so AYU immediately commits to pursuing LULU while repairs are happening
+  - when the repair cue is active, AYU now refreshes chase memory and keeps pressure on LULU instead of treating repair as a soft movement target
+  - preserved the LULU `hitSpin` movement allowance from the prior pass
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - local browser smoke confirmed the client still boots cleanly
+  - browser artifact:
+    - `output/web-game/m74-smoke/shot-0.png`
+
+## Milestone 71
+
+- Status: complete
+- AYU repair cue restoration:
+  - restored the LULU repair signal so it is not suppressed by nearby pallets, healer NPCs, or chests
+  - kept the single-player global repair cue behavior intact so AYU can lock on to LULU from anywhere while she is actively repairing
+  - left the hit-spin movement exception unchanged
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - local browser smoke confirmed the client still boots cleanly
+  - browser artifact:
+    - `output/web-game/m75-smoke/shot-0.png`
+
+## Milestone 72
+
+- Status: complete
+- AYU repair cue timing:
+  - refreshed LULU's repair cue before AYU's AI decision step so the global repair signal is visible in the same frame LULU starts repairing
+  - kept the end-of-step repair progress update intact so generator progress still advances normally
+  - preserved the LULU hit-spin movement allowance
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - local browser smoke confirmed the client still boots cleanly
+  - browser artifact:
+    - `output/web-game/m76-smoke/shot-0.png`
+
+## Milestone 73
+
+- Status: complete
+- AYU repair magnet restoration and wrench cooldown:
+  - traced the AYU repair regression to the single-player chest-priority branch added in `a25a6e9`, which was running before repair pursuit and letting visible treasure chests override the old generator-repair chase behavior
+  - made repair cues override chest pursuit again, including interrupting chest opening so AYU immediately returns to chasing a repairing LULU
+  - added a `5,000ms` wrench throw cooldown inside the `30,000ms` wrench window, with cooldown fallback to melee attacks and a flashing wrench icon above AYU while the throw is recharging
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probe confirmed:
+    - repair cue forces `aiState = "chase"` and leaves `priorityChestId = null` even with a visible chest nearby
+    - chest opening is canceled when LULU starts repairing and AYU resumes moving toward her
+    - wrench attacks cycle `projectile -> melee -> projectile` across the cooldown window
+  - probe artifact:
+    - `output/web-game/m73-ai-wrench-probe.json`
+  - local browser smoke still reached the title splash state
+  - browser artifacts:
+    - `output/web-game/m73-smoke-2/state-0.json`
+    - `output/web-game/m73-smoke-2/state-1.json`
+
+## Milestone 74
+
+- Status: complete
+- AYU repair global-vision follow-up:
+  - fixed the deeper pursuit regression where repair cues could switch AYU into `chase` while still leaving pathing in the slower lost-sight route-commit mode
+  - repair cues now count as direct chase vision for the route chooser, so AYU immediately drops stale commit directions and heads straight back toward a repairing LULU
+  - preserved the earlier chest-interrupt behavior and the wrench cooldown work
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probe confirmed a stale wrong-way chase commit is cleared as soon as LULU starts repairing, with AYU moving toward LULU in the same frame
+  - probe artifact:
+    - `output/web-game/m74-repair-vision-probe.json`
+  - local browser smoke reached a live single-player round successfully
+  - browser artifacts:
+    - `output/web-game/m74-smoke/state-0.json`
+    - `output/web-game/m74-smoke/shot-0.png`
+
+## Milestone 75
+
+- Status: complete
+- AYU chase stickiness restoration:
+  - restored AYU's short hot-pursuit grace after losing direct line-of-sight by making the route chooser honor the existing `vision.chaseMemoryMs` window
+  - during that memory window, AYU clears stale wrong-way commit directions and keeps pushing toward LULU's last confirmed position instead of immediately softening into the easier-to-lose route mode
+  - preserved the repair-cue override, chest visibility rules, and wrench cooldown behavior
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probe confirmed a chase with `aiChaseSightLossMs = 200` clears a wrong-way commit and moves AYU toward the last confirmed LULU position
+  - probe artifact:
+    - `output/web-game/m75-sticky-chase-probe.json`
+
+## Milestone 76
+
+- Status: complete
+- AYU 4/4 chase-pressure restoration:
+  - compared the current AI against the 4/4-era build at commit `7bb0bc5` and restored two pressure behaviors that had drifted away from that version
+  - chest pursuit is now opportunistic again instead of sticky: AYU only takes a chest when it is currently visible while wandering with no active item, and she stops pursuing it once it is no longer in sight
+  - removed the later chase-time backward backoff behavior so AYU no longer gives ground during active pursuit around corners and ledges, matching the more relentless 4/4 feel more closely
+  - after opening a chest and receiving her one item, AYU immediately re-enters chase if LULU is visible, close, or actively repairing
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probes confirmed:
+    - chase still clears a wrong-way commit and moves toward the last confirmed target during the sticky chase window
+    - invisible chest commitments are dropped immediately
+    - after receiving an item from a chest, AYU re-enters `chase` and clears chest priority
+  - probe artifacts:
+    - `output/web-game/m75-sticky-chase-probe.json`
+    - `output/web-game/m76-chest-focus-probe.json`
+  - local browser smoke reached a live single-player round successfully
+  - browser artifacts:
+    - `output/web-game/m76-smoke/state-0.json`
+    - `output/web-game/m76-smoke/shot-0.png`
+
+## Milestone 77
+
+- Status: complete
+- AYU item-focus follow-up:
+  - active AYU items now create the same single-player global pursuit cue as generator repairs, so once AYU gets a heart charm or wrench she immediately locks back onto LULU instead of drifting out of pressure
+  - threaded the item cue through the full AI state machine so `hunt`, `chase`, `search`, and `cooldown` all treat the item as a chase-forcing signal, and chest priority stays cleared while the item is active
+  - preserved the opportunistic chest rule: AYU still only goes for a chest when she has no active item and the chest is currently visible while wandering
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic item-focus probe confirmed:
+    - AYU switches from `hunt` to `chase`
+    - `priorityChestId` clears immediately
+    - `aiChaseSightLossMs` stays at `0` across frames while the item cue is active
+  - probe artifact:
+    - `output/web-game/m77-item-focus-probe.json`
+  - local browser smoke reached a live single-player round successfully
+  - browser artifacts:
+    - `output/web-game/m77-smoke-2/state-0.json`
+    - `output/web-game/m77-smoke-2/shot-0.png`
+
+## Milestone 78
+
+- Status: complete
+- Multiplayer AYU attack-vault smoothing:
+  - adjusted Springtrap's lock model so a multiplayer manual action press can carry ledge traversal inside the same melee/ranged attack flow instead of forcing a separate awkward vault lock first
+  - when human-controlled AYU presses action next to a ledge in multiplayer, the attack now starts immediately and the ledge crossing runs at the same time for smoother movement
+  - preserved the existing single-player and AI ledge behavior, and if traversal outlasts the attack timing it cleanly falls through into the remaining vault travel
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probe confirmed:
+    - action press near a ledge enters `attackWindup`
+    - traverse data is attached immediately
+    - AYU begins moving across the ledge while still in the attack lock
+  - probe artifact:
+    - `output/web-game/m78-attack-vault-probe.json`
+  - local browser smoke reached a live round successfully
+  - browser artifacts:
+    - `output/web-game/m78-smoke-dev-2/state-0.json`
+    - `output/web-game/m78-smoke-dev-2/shot-0.png`
+
+## Milestone 79
+
+- Status: complete
+- Single-player AYU item-cycle and stuck handling update:
+  - removed AI chest interaction entirely so single-player AYU no longer seeks, opens, or keeps priority on treasure chests
+  - human-controlled AYU chest behavior remains intact; only non-human AYU chest opening is suppressed
+  - added an AI-only item loop for single-player AYU: `30s` heart charm, `10s` no item, `30s` wrench, `10s` no item, then repeat
+  - kept active AYU items feeding the existing global chase cue so AYU immediately refocuses on LULU while heart charm or wrench is active
+  - tightened the unstuck backstep so it only fires on real blocked-in-place stutter, while ordinary short blocked commit resets now just drop the bad route and continue pathing
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic probe confirmed:
+    - AYU starts with heart charm active in single-player, enters `chase`, moves toward LULU, and leaves nearby chests untouched
+    - the item cycle transitions `heart_charm -> none_after_heart -> wrench` with chest state still unchanged
+    - true blocked-in-place stutter triggers the short backoff commit, while a merely blocked-but-moving case does not
+  - probe artifact:
+    - `output/web-game/m79-ai-cycle-stuck-probe.json`
+  - local browser smoke reached a live single-player round successfully with AYU already in `chase`
+  - browser artifacts:
+    - `output/web-game/m79-smoke/state-0.json`
+    - `output/web-game/m79-smoke/shot-0.png`
+
+## Milestone 80
+
+- Status: complete
+- Mobile overlay sizing and multiplayer host-only next-round flow:
+  - tightened phone-sized overlay typography and panel sizing for the splash, join, waiting, HUD prompt, and round-end result layouts so they stop overtaking the full screen on narrow viewports
+  - added explicit `isHost` session info through the server room-state payload and client runtime so multiplayer UI can distinguish host from guest reliably
+  - changed multiplayer next-round flow so only the room host can start the next round, with guest clients seeing a host-only message instead of a misleading `Play Again` button
+  - enforced the same host-only rule on the server rematch handler and promoted the remaining player to host if the original host disconnects
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - custom Playwright probe confirmed:
+    - phone-width splash and join overlays render at a much smaller scale
+    - the room creator reports `isHost: true`
+    - the joining player reports `isHost: false`
+    - after the host disconnects, the remaining player is promoted to `isHost: true`
+  - probe artifacts:
+    - `output/web-game/m80-ui-host/results.json`
+    - `output/web-game/m80-ui-host/mobile-splash.png`
+    - `output/web-game/m80-ui-host/mobile-join.png`
+    - `output/web-game/m80-ui-host/guest-after-host-leaves.png`
+
+## Milestone 81
+
+- Status: complete
+- Single-player AYU item-cycle downtime increase:
+  - increased AI AYU's no-item downtime between heart charm and wrench phases from `10s` to `45s`
+  - the single-player cycle is now `30s` heart charm -> `45s` no item -> `30s` wrench -> `45s` no item -> repeat
+  - human-controlled AYU remains unchanged
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic timing probe confirmed:
+    - initial phase starts at `heart_charm` with `30000ms`
+    - after heart charm, AYU enters `none_after_heart` with `45000ms`
+    - after the first downtime, AYU enters `wrench` with `30000ms`
+    - after wrench, AYU enters `none_after_wrench` with `45000ms`
+  - probe artifact:
+    - `output/web-game/m81-ai-item-downtime-probe.json`
+  - local browser smoke reached a live single-player round successfully
+  - browser artifacts:
+    - `output/web-game/m81-smoke/state-0.json`
+    - `output/web-game/m81-smoke/shot-0.png`
+
+## Milestone 82
+
+- Status: complete
+- Single-player AYU item-cycle order change:
+  - changed AI AYU's loop order to start with downtime instead of heart charm
+  - the single-player cycle is now `45s` no item -> `30s` wrench -> `45s` no item -> `30s` heart charm -> repeat
+  - human-controlled AYU remains unchanged
+- Validation:
+  - `npm run typecheck`
+  - `npm run build`
+  - deterministic order probe confirmed:
+    - initial phase starts at `none_after_heart` with `45000ms`
+    - after the first downtime, AYU enters `wrench` with `30000ms`
+    - after wrench, AYU enters `none_after_wrench` with `45000ms`
+    - after the second downtime, AYU enters `heart_charm` with `30000ms`
+  - probe artifact:
+    - `output/web-game/m82-ai-item-order-probe.json`
+  - local browser smoke reached a live single-player round successfully
+  - browser artifacts:
+    - `output/web-game/m82-smoke/state-0.json`
+    - `output/web-game/m82-smoke/shot-0.png`

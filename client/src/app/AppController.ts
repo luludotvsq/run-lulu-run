@@ -256,7 +256,7 @@ export class AppController {
     }
 
     if (state.result !== "running") {
-      this.renderRoundEndOverlay(state, session.getLocalRole(), info?.mode ?? "single");
+      this.renderRoundEndOverlay(state, session.getLocalRole(), info?.mode ?? "single", info?.isHost ?? true);
       return;
     }
 
@@ -464,13 +464,21 @@ export class AppController {
     });
   }
 
-  private renderRoundEndOverlay(state: MatchState, localRole: Role, mode: "single" | "multiplayer"): void {
+  private renderRoundEndOverlay(
+    state: MatchState,
+    localRole: Role,
+    mode: "single" | "multiplayer",
+    isHost: boolean,
+  ): void {
     const completedGenerators = state.generators.filter((generator) => generator.completed).length;
     const winnerArt =
       state.result === "springtrap_win"
         ? CLIENT_CONFIG.branding.roundResultArt.ayuWin
         : CLIENT_CONFIG.branding.roundResultArt.luluWin;
     const winnerAlt = state.result === "springtrap_win" ? "AYU win art" : "LULU win art";
+    const showPlayAgainButton = mode === "single" || isHost;
+    const resultNotice =
+      this.uiState.notice || (mode === "multiplayer" && !isHost ? "Only the host can start the next round." : "");
 
     this.layout.overlayRoot.innerHTML = `
       <div class="result-screen">
@@ -488,13 +496,11 @@ export class AppController {
               <strong class="result-stat-value">${completedGenerators} / ${state.generators.length}</strong>
             </div>
           </div>
-          ${this.uiState.notice ? `<p class="result-notice">${this.uiState.notice}</p>` : ""}
-          <div class="result-actions">
-            ${
-              mode === "multiplayer"
-                ? '<button class="action-button" id="play-again-btn">Play Again</button>'
-                : '<button class="action-button" id="restart-single-btn">Play Again</button>'
-            }
+          ${resultNotice ? `<p class="result-notice">${resultNotice}</p>` : ""}
+          <div class="result-actions${showPlayAgainButton ? "" : " result-actions-single"}">
+            ${showPlayAgainButton ? (mode === "multiplayer"
+              ? '<button class="action-button" id="play-again-btn">Play Again</button>'
+              : '<button class="action-button" id="restart-single-btn">Play Again</button>') : ""}
             <button class="ghost-button" id="back-to-splash-match-btn">Back To Title</button>
           </div>
         </div>
@@ -543,6 +549,7 @@ export class AppController {
       status: info?.statusText ?? "",
       result: state?.result ?? "none",
       round: state?.roundNumber ?? 0,
+      isHost: info?.isHost ?? true,
     });
   }
 }

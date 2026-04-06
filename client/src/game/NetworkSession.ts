@@ -8,6 +8,7 @@ interface RoomStatePayload {
   roomCode: string;
   waiting: boolean;
   statusText: string;
+  isHost: boolean;
   role: Role | null;
   match: MatchState | null;
 }
@@ -31,6 +32,7 @@ export class NetworkSession implements ActiveSession {
   private actionHeld = false;
   private state: MatchState | null = null;
   private statusText = "Connecting...";
+  private isHost = false;
 
   private constructor(socket: Socket) {
     this.socket = socket;
@@ -87,6 +89,7 @@ export class NetworkSession implements ActiveSession {
       this.roomCode = payload.roomCode;
       this.waiting = payload.waiting;
       this.statusText = payload.statusText;
+      this.isHost = payload.isHost;
       this.state = payload.match;
       if (payload.role) {
         this.localRole = payload.role;
@@ -104,6 +107,7 @@ export class NetworkSession implements ActiveSession {
       roomCode: this.roomCode,
       waiting: this.waiting,
       statusText: this.statusText,
+      isHost: this.isHost,
     };
   }
 

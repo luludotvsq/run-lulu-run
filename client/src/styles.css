@@ -392,6 +392,10 @@ canvas {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.result-actions-single {
+  grid-template-columns: 1fr;
+}
+
 .result-stat {
   display: grid;
   gap: 6px;
@@ -725,5 +729,135 @@ canvas {
   .touch-action-button {
     min-width: 96px;
     min-height: 96px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hud-overlay {
+    padding: 10px;
+  }
+
+  .hud-overlay-mobile-controls {
+    padding-bottom: calc(154px + env(safe-area-inset-bottom));
+  }
+
+  .hud-row {
+    gap: 6px;
+  }
+
+  .hud-pill {
+    min-width: 78px;
+    padding: 6px 8px;
+  }
+
+  .hud-pill span,
+  .field-label span,
+  .menu-kicker {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+  }
+
+  .hud-pill strong {
+    font-size: 13px;
+  }
+
+  .hud-prompt,
+  .hud-debug {
+    max-width: min(82vw, 276px);
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .menu-panel {
+    width: min(92vw, 320px);
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .menu-panel h2 {
+    font-size: clamp(22px, 7.5vw, 30px);
+  }
+
+  .title-screen-splash {
+    padding: 12px;
+  }
+
+  .title-brand-panel {
+    max-width: min(76vw, 280px);
+    padding: 10px 12px;
+  }
+
+  .title-actions-panel {
+    width: min(92vw, 300px);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .title-logo-splash {
+    font-size: clamp(30px, 11vw, 56px);
+    letter-spacing: 0.12em;
+  }
+
+  .status-copy,
+  .title-status,
+  .result-notice {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .room-code-display {
+    padding: 12px 14px;
+    font-size: clamp(24px, 10vw, 40px);
+  }
+
+  .text-input {
+    padding: 10px 12px;
+  }
+
+  .room-code-input {
+    font-size: 18px;
+    letter-spacing: 0.18em;
+  }
+
+  .action-button,
+  .ghost-button {
+    min-height: 42px;
+    padding: 10px 12px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .result-screen {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .result-screen-figure {
+    width: min(78vw, 300px);
+  }
+
+  .result-screen-summary {
+    width: min(92vw, 300px);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .result-screen-stats,
+  .result-actions {
+    gap: 10px;
+  }
+
+  .result-stat {
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .result-stat-label {
+    font-size: 9px;
+  }
+
+  .result-stat-value {
+    font-size: clamp(18px, 5vw, 24px);
   }
 }

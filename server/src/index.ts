@@ -29,6 +29,7 @@ interface RoomAckResponse {
 
 interface RoomRecord {
   code: string;
+  hostId: string;
   players: string[];
   roles: Map<string, Role>;
   inputs: Map<string, PlayerInputState>;
@@ -120,20 +121,24 @@ function getDefaultInput(): PlayerInputState {
   };
 }
 
-function getRoomStatus(room: RoomRecord): string {
+function getRoomStatus(room: RoomRecord, viewerSocketId: string): string {
   if (room.players.length < 2) {
-    return "Waiting for a second player to join.";
+    return room.hostId === viewerSocketId
+      ? "Waiting for a second player to join."
+      : "Waiting for the host to start the room.";
   }
 
   if (!room.match) {
-    return "Waiting to start the round.";
+    return room.hostId === viewerSocketId ? "Waiting to start the round." : "Waiting for the host to start the round.";
   }
 
   if (room.match.result === "running") {
     return `Round ${room.roundNumber} live.`;
   }
 
-  return `Round ${room.roundNumber} ended. Play Again if both players stay.`;
+  return room.hostId === viewerSocketId
+    ? `Round ${room.roundNumber} ended. Start the next round when ready.`
+    : `Round ${room.roundNumber} ended. Waiting for the host to start the next round.`;
 }
 
 function emitRoomState(room: RoomRecord): void {
@@ -141,10 +146,10 @@ function emitRoomState(room: RoomRecord): void {
     io.to(socketId).emit("room:state", {
       roomCode: room.code,
       waiting: room.players.length < 2 || room.match === null,
-      statusText: getRoomStatus(room),
+      statusText: getRoomStatus(room, socketId),
+      isHost: socketId === room.hostId,
       role: room.roles.get(socketId) ?? null,
       match: room.match,
-      rematchVotes: room.rematchVotes.size,
     });
   }
 }
@@ -261,6 +266,9 @@ function detachSocket(socketId: string): void {
     return;
   }
 
+  if (room.hostId === socketId) {
+    room.hostId = room.players[0];
+  }
   room.match = null;
   emitRoomState(room);
 }
@@ -295,6 +303,7 @@ io.on("connection", (socket: Socket) => {
     const roomCode = generateRoomCode();
     const room: RoomRecord = {
       code: roomCode,
+      hostId: socket.id,
       players: [socket.id],
       roles: new Map(),
       inputs: new Map([[socket.id, getDefaultInput()]]),
@@ -415,25 +424,23 @@ io.on("connection", (socket: Socket) => {
       return;
     }
 
+    if (socket.id !== room.hostId) {
+      ack({ ok: false, message: "Only the host can start the next round." });
+      return;
+    }
+
     const catalogStatus = await getRuntimeCatalogStatus();
     if (!catalogStatus.ready) {
       ack({ ok: false, message: catalogStatus.message });
       return;
     }
 
-    room.rematchVotes.add(socket.id);
-    if (room.rematchVotes.size === 2) {
-      try {
-        await startRound(room, { swapRoles: true });
-        ack({ ok: true, roomCode });
-      } catch (error) {
-        ack({ ok: false, message: error instanceof Error ? error.message : "Could not start the rematch." });
-      }
-      return;
+    try {
+      await startRound(room, { swapRoles: true });
+      ack({ ok: true, roomCode });
+    } catch (error) {
+      ack({ ok: false, message: error instanceof Error ? error.message : "Could not start the rematch." });
     }
-
-    emitRoomState(room);
-    ack({ ok: true, roomCode });
   });
 
   socket.on("disconnect", () => {

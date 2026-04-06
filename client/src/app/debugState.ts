@@ -37,6 +37,7 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       waiting: session.getInfo().waiting,
       roomCode: session.getInfo().roomCode,
       status: session.getInfo().statusText,
+      isHost: session.getInfo().isHost,
       audio,
     });
   }
@@ -59,6 +60,7 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
     roomCode: session.getInfo().roomCode,
     waiting: session.getInfo().waiting,
     status: session.getInfo().statusText,
+    isHost: session.getInfo().isHost,
     audio,
     mapId: state.mapId,
     result: state.result,
@@ -103,6 +105,7 @@ export function buildTextStatePayload(options: BuildTextStateOptions): string {
       heartCharmRemainingMs: roundValue(state.springtrap.heartCharmRemainingMs),
       heartCharmCooldownRemainingMs: roundValue(state.springtrap.heartCharmCooldownRemainingMs),
       wrenchRemainingMs: roundValue(state.springtrap.wrenchRemainingMs),
+      wrenchCooldownRemainingMs: roundValue(state.springtrap.wrenchCooldownRemainingMs),
       distractionNpcId: state.springtrap.aiDistractionNpcId,
       huntTarget: state.springtrap.aiHuntTarget
         ? {

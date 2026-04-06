@@ -88,6 +88,9 @@ export function getHudPrompt(state: MatchState, role: Role): string {
       return `AYU's charm is active. Face LULU to pull her in.`;
     }
     if (state.springtrap.wrenchRemainingMs > 0) {
+      if (state.springtrap.wrenchCooldownRemainingMs > 0) {
+        return `AYU's wrench is recharging. ${actionLabel} attacks with melee until it is ready again.`;
+      }
       return `AYU's wrench is active. ${actionLabel} throws a projectile.`;
     }
 

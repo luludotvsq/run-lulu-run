@@ -655,7 +655,7 @@ export class GameScene extends Phaser.Scene {
         visual.itemIcon.setPosition(actor.x, displayY - actorDisplaySize * 0.42);
         visual.itemIcon.setDepth(visual.sprite.depth + actorDisplaySize * 0.3);
         visual.itemIcon.setVisible(visible);
-        visual.itemIcon.setAlpha(visual.sprite.alpha);
+        visual.itemIcon.setAlpha(this.getActorItemAlpha(actor, itemTextureKey, state, visual.sprite.alpha));
       } else if (visual.itemIcon) {
         visual.itemIcon.destroy();
         visual.itemIcon = null;
@@ -749,6 +749,24 @@ export class GameScene extends Phaser.Scene {
     }
 
     return null;
+  }
+
+  private getActorItemAlpha(
+    actor: ActorBase,
+    itemTextureKey: string,
+    state: MatchState,
+    baseAlpha: number,
+  ): number {
+    if (actor.kind !== "springtrap" || itemTextureKey !== STATIC_TEXTURE_KEYS.pickupWrench) {
+      return baseAlpha;
+    }
+
+    const springtrap = state.springtraps.find((entry) => entry.id === actor.id);
+    if (!springtrap || springtrap.wrenchCooldownRemainingMs <= 0) {
+      return baseAlpha;
+    }
+
+    return Math.floor(this.time.now / 140) % 2 === 0 ? baseAlpha : baseAlpha * 0.22;
   }
 
   private getActorSpinAngle(actor: ActorBase): number {

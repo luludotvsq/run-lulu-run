@@ -5,6 +5,7 @@ export interface SessionInfo {
   roomCode: string | null;
   waiting: boolean;
   statusText: string;
+  isHost: boolean;
 }
 
 export interface ActiveSession {

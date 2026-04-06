@@ -15,6 +15,15 @@ export interface Rect {
   h: number;
 }
 
+export interface TraverseData {
+  remainingMs: number;
+  totalMs: number;
+  from: Vec2;
+  to: Vec2;
+  sourceId: string;
+  sourceType: "ledge" | "pallet";
+}
+
 export type Direction = "up" | "down" | "left" | "right";
 export interface MoveIntent {
   primary: Direction;
@@ -28,6 +37,7 @@ export type HealthState = "healthy" | "injured" | "dead" | "escaped";
 export type NpcHealthState = "healthy" | "injured" | "dead";
 export type NpcAiMode = "wander" | "move_to_generator" | "repair_generator" | "flee";
 export type SpringtrapAiState = "hunt" | "chase" | "search" | "cooldown";
+export type SpringtrapAiItemCyclePhase = "heart_charm" | "none_after_heart" | "wrench" | "none_after_wrench";
 export type ObstacleKind = "wall" | "rock" | "car";
 export type LedgeOrientation = "horizontal" | "vertical";
 export type PalletState = "upright" | "downed" | "respawning";
@@ -98,15 +108,7 @@ export interface MapData {
 
 export type ActorLock =
   | { kind: "none" }
-  | {
-      kind: "vault";
-      remainingMs: number;
-      totalMs: number;
-      from: Vec2;
-      to: Vec2;
-      sourceId: string;
-      sourceType: "ledge" | "pallet";
-    }
+  | ({ kind: "vault" } & TraverseData)
   | {
       kind: "charmed";
       remainingMs: number;
@@ -126,9 +128,28 @@ export type ActorLock =
   | { kind: "flashBlinded"; remainingMs: number; totalMs: number }
   | { kind: "hitSpin"; remainingMs: number; totalMs: number }
   | { kind: "hitStunned"; remainingMs: number; totalMs: number }
-  | { kind: "attackWindup"; remainingMs: number; facing: Direction; attackMode: "melee" | "projectile" }
-  | { kind: "attackActive"; remainingMs: number; hitApplied: boolean; facing: Direction; attackMode: "melee" | "projectile" }
-  | { kind: "attackRecovery"; remainingMs: number; facing: Direction; attackMode: "melee" | "projectile" }
+  | {
+      kind: "attackWindup";
+      remainingMs: number;
+      facing: Direction;
+      attackMode: "melee" | "projectile";
+      traverse: TraverseData | null;
+    }
+  | {
+      kind: "attackActive";
+      remainingMs: number;
+      hitApplied: boolean;
+      facing: Direction;
+      attackMode: "melee" | "projectile";
+      traverse: TraverseData | null;
+    }
+  | {
+      kind: "attackRecovery";
+      remainingMs: number;
+      facing: Direction;
+      attackMode: "melee" | "projectile";
+      traverse: TraverseData | null;
+    }
   | { kind: "palletDrop"; remainingMs: number; palletId: string }
   | { kind: "openingChest"; remainingMs: number; totalMs: number; chestId: string }
   | { kind: "healing"; remainingMs: number; totalMs: number; npcId: string }
@@ -172,12 +193,16 @@ export interface SpringtrapState extends ActorBase {
   aiBlockedCommitFrames: number;
   aiStuckFrames: number;
   aiStuckAnchor: Vec2 | null;
+  aiStuckLastPosition: Vec2 | null;
+  aiItemCyclePhase: SpringtrapAiItemCyclePhase;
+  aiItemCycleRemainingMs: number;
   trackerDisabledRemainingMs: number;
   flashOverlayRemainingMs: number;
   insideFlashlightZone: boolean;
   heartCharmRemainingMs: number;
   heartCharmCooldownRemainingMs: number;
   wrenchRemainingMs: number;
+  wrenchCooldownRemainingMs: number;
 }
 
 export interface NpcState extends ActorBase {

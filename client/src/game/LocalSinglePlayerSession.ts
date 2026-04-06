@@ -28,6 +28,7 @@ export class LocalSinglePlayerSession implements ActiveSession {
       roomCode: null,
       waiting: false,
       statusText: "Single-player round",
+      isHost: true,
     };
   }
 

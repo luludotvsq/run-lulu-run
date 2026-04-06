@@ -18,9 +18,11 @@ import type {
   NpcState,
   PalletRuntime,
   ProjectileRuntime,
+  SpringtrapAiItemCyclePhase,
   SpringtrapAiState,
   SpringtrapState,
   TreasureChestRuntime,
+  TraverseData,
   Vec2,
 } from "./types.js";
 
@@ -82,12 +84,16 @@ function createSpringtrapAt(spawn: Vec2, id: string, facing: Direction = "left")
     aiBlockedCommitFrames: 0,
     aiStuckFrames: 0,
     aiStuckAnchor: null,
+    aiStuckLastPosition: null,
+    aiItemCyclePhase: "none_after_heart",
+    aiItemCycleRemainingMs: 0,
     trackerDisabledRemainingMs: 0,
     flashOverlayRemainingMs: 0,
     insideFlashlightZone: false,
     heartCharmRemainingMs: 0,
     heartCharmCooldownRemainingMs: 0,
     wrenchRemainingMs: 0,
+    wrenchCooldownRemainingMs: 0,
   };
 }
 
@@ -351,6 +357,11 @@ export function createMatch(mode: MatchMode, mapId = DEFAULT_MAP_ID): MatchState
       getFacingToward(spawn, roundSpawns.lulu),
     ),
   );
+  if (mode === "single") {
+    for (const springtrap of springtraps) {
+      activateSpringtrapAiItemCyclePhase(springtrap, "none_after_heart");
+    }
+  }
   return {
     mode,
     mapId,
@@ -438,41 +449,111 @@ function springtrapHasActiveItem(springtrap: SpringtrapState): boolean {
   return springtrap.heartCharmRemainingMs > 0 || springtrap.wrenchRemainingMs > 0;
 }
 
-function chooseVisibleSpringtrapChest(state: MatchState, springtrap: SpringtrapState): TreasureChestRuntime | null {
-  const map = getMap(state);
-  const visibleChests = state.chests.filter(
-    (chest) => chest.state === "closed" && canSeePoint(springtrap, chest, getVisionRadius("springtrap"), map.obstacles),
-  );
-  if (visibleChests.length === 0) {
-    return null;
-  }
-
-  return [...visibleChests].sort((left, right) => distance(springtrap, left) - distance(springtrap, right))[0] ?? null;
+function canSpringtrapThrowWrench(springtrap: SpringtrapState): boolean {
+  return springtrap.wrenchRemainingMs > 0 && springtrap.wrenchCooldownRemainingMs <= 0;
 }
 
-function getSpringtrapPriorityChest(state: MatchState, springtrap: SpringtrapState): TreasureChestRuntime | null {
-  if (state.mode !== "single" || springtrapHasActiveItem(springtrap)) {
-    springtrap.aiPriorityChestId = null;
+function getSpringtrapAiItemCycleDuration(phase: SpringtrapAiItemCyclePhase): number {
+  switch (phase) {
+    case "heart_charm":
+      return GAME_CONFIG.boosts.heartCharmDurationMs;
+    case "wrench":
+      return GAME_CONFIG.boosts.wrenchDurationMs;
+    case "none_after_heart":
+    case "none_after_wrench":
+      return getSinglePlayerAiConfig().itemDowntimeMs;
+  }
+}
+
+function getNextSpringtrapAiItemCyclePhase(phase: SpringtrapAiItemCyclePhase): SpringtrapAiItemCyclePhase {
+  switch (phase) {
+    case "heart_charm":
+      return "none_after_heart";
+    case "none_after_heart":
+      return "wrench";
+    case "wrench":
+      return "none_after_wrench";
+    case "none_after_wrench":
+      return "heart_charm";
+  }
+}
+
+function syncSpringtrapAiItemCyclePhase(springtrap: SpringtrapState): void {
+  if (springtrap.aiItemCyclePhase === "heart_charm") {
+    springtrap.heartCharmRemainingMs = springtrap.aiItemCycleRemainingMs;
+    springtrap.heartCharmCooldownRemainingMs = Math.min(
+      springtrap.heartCharmCooldownRemainingMs,
+      springtrap.aiItemCycleRemainingMs,
+    );
+    springtrap.wrenchRemainingMs = 0;
+    springtrap.wrenchCooldownRemainingMs = 0;
+    return;
+  }
+
+  if (springtrap.aiItemCyclePhase === "wrench") {
+    springtrap.heartCharmRemainingMs = 0;
+    springtrap.heartCharmCooldownRemainingMs = 0;
+    springtrap.wrenchRemainingMs = springtrap.aiItemCycleRemainingMs;
+    springtrap.wrenchCooldownRemainingMs = Math.min(
+      springtrap.wrenchCooldownRemainingMs,
+      springtrap.aiItemCycleRemainingMs,
+    );
+    return;
+  }
+
+  springtrap.heartCharmRemainingMs = 0;
+  springtrap.heartCharmCooldownRemainingMs = 0;
+  springtrap.wrenchRemainingMs = 0;
+  springtrap.wrenchCooldownRemainingMs = 0;
+}
+
+function activateSpringtrapAiItemCyclePhase(
+  springtrap: SpringtrapState,
+  phase: SpringtrapAiItemCyclePhase,
+): void {
+  springtrap.aiItemCyclePhase = phase;
+  springtrap.aiItemCycleRemainingMs = getSpringtrapAiItemCycleDuration(phase);
+  if (phase === "heart_charm") {
+    springtrap.heartCharmCooldownRemainingMs = 0;
+  }
+  if (phase === "wrench") {
+    springtrap.wrenchCooldownRemainingMs = 0;
+  }
+  syncSpringtrapAiItemCyclePhase(springtrap);
+}
+
+function updateSpringtrapAiItemCycle(springtrap: SpringtrapState, deltaMs: number): void {
+  let remainingDeltaMs = Math.max(0, deltaMs);
+  while (remainingDeltaMs > 0) {
+    if (springtrap.aiItemCycleRemainingMs <= 0) {
+      activateSpringtrapAiItemCyclePhase(
+        springtrap,
+        getNextSpringtrapAiItemCyclePhase(springtrap.aiItemCyclePhase),
+      );
+    }
+
+    const consumedMs = Math.min(remainingDeltaMs, springtrap.aiItemCycleRemainingMs);
+    springtrap.aiItemCycleRemainingMs = Math.max(0, springtrap.aiItemCycleRemainingMs - consumedMs);
+    remainingDeltaMs -= consumedMs;
+  }
+
+  if (springtrap.aiItemCycleRemainingMs <= 0) {
+    activateSpringtrapAiItemCyclePhase(
+      springtrap,
+      getNextSpringtrapAiItemCyclePhase(springtrap.aiItemCyclePhase),
+    );
+    return;
+  }
+
+  syncSpringtrapAiItemCyclePhase(springtrap);
+}
+
+function getSpringtrapItemCueTarget(state: MatchState, springtrap: SpringtrapState): Vec2 | null {
+  if (state.mode !== "single" || !springtrapHasActiveItem(springtrap)) {
     return null;
   }
 
-  if (springtrap.lock.kind === "openingChest") {
-    const { chestId } = springtrap.lock;
-    const openingChest =
-      state.chests.find((chest) => chest.id === chestId && chest.state === "closed") ?? null;
-    springtrap.aiPriorityChestId = openingChest?.id ?? null;
-    return openingChest;
-  }
-
-  const committedChest =
-    state.chests.find((chest) => chest.id === springtrap.aiPriorityChestId && chest.state === "closed") ?? null;
-  if (committedChest) {
-    return committedChest;
-  }
-
-  const visibleChest = chooseVisibleSpringtrapChest(state, springtrap);
-  springtrap.aiPriorityChestId = visibleChest?.id ?? null;
-  return visibleChest;
+  return state.lulu;
 }
 
 function shouldAllowNpcDistraction(state: MatchState, aiState: SpringtrapAiState): boolean {
@@ -946,6 +1027,7 @@ function repairGenerator(generator: GeneratorData, deltaMs: number, multiplier =
 interface MoveActorOptions {
   allowAutoVault?: boolean;
   manualVaultPressed?: boolean;
+  combineManualVaultAttack?: boolean;
 }
 
 interface PathChoiceOptions {
@@ -1656,6 +1738,7 @@ function resetSpringtrapCommitState(springtrap: SpringtrapState): void {
   springtrap.aiBlockedCommitFrames = 0;
   springtrap.aiStuckFrames = 0;
   springtrap.aiStuckAnchor = null;
+  springtrap.aiStuckLastPosition = null;
 }
 
 function clearSpringtrapCommitDirection(springtrap: SpringtrapState): Direction | null {
@@ -1666,6 +1749,12 @@ function clearSpringtrapCommitDirection(springtrap: SpringtrapState): Direction 
   return previousDirection;
 }
 
+function resetSpringtrapStuckWindow(springtrap: SpringtrapState): void {
+  springtrap.aiStuckFrames = 0;
+  springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
+  springtrap.aiStuckLastPosition = { x: springtrap.x, y: springtrap.y };
+}
+
 function beginSpringtrapCommit(
   springtrap: SpringtrapState,
   direction: Direction,
@@ -1674,14 +1763,12 @@ function beginSpringtrapCommit(
   springtrap.aiCommitDirection = direction;
   springtrap.aiCommitRemainingMs = durationMs;
   springtrap.aiBlockedCommitFrames = 0;
-  springtrap.aiStuckFrames = 0;
-  springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
+  resetSpringtrapStuckWindow(springtrap);
 }
 
 function clearSpringtrapCommitAndRestartWindow(springtrap: SpringtrapState): Direction | null {
   const previousDirection = clearSpringtrapCommitDirection(springtrap);
-  springtrap.aiStuckFrames = 0;
-  springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
+  resetSpringtrapStuckWindow(springtrap);
   return previousDirection;
 }
 
@@ -1690,9 +1777,8 @@ function updateSpringtrapCommitWindow(
   target: Vec2,
 ): Direction | null {
   const aiConfig = getSinglePlayerAiConfig();
-  if (!springtrap.aiStuckAnchor) {
-    springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
-    springtrap.aiStuckFrames = 0;
+  if (!springtrap.aiStuckAnchor || !springtrap.aiStuckLastPosition) {
+    resetSpringtrapStuckWindow(springtrap);
     return null;
   }
 
@@ -1700,23 +1786,28 @@ function updateSpringtrapCommitWindow(
     distance(springtrap.aiStuckAnchor, target) - distance(springtrap, target);
   if (springtrap.aiCommitDirection && improvement >= 16) {
     clearSpringtrapCommitDirection(springtrap);
-    springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
-    springtrap.aiStuckFrames = 0;
+    resetSpringtrapStuckWindow(springtrap);
     return null;
   }
 
-  const withinStuckBox =
-    Math.abs(springtrap.x - springtrap.aiStuckAnchor.x) <= aiConfig.stuckBBoxPx &&
-    Math.abs(springtrap.y - springtrap.aiStuckAnchor.y) <= aiConfig.stuckBBoxPx;
+  const movedThisFrame = distance(springtrap, springtrap.aiStuckLastPosition);
+  const stutteringInPlace =
+    springtrap.aiCommitDirection !== null &&
+    springtrap.aiBlockedCommitFrames > 0 &&
+    movedThisFrame <= aiConfig.stuckMoveThresholdPx;
 
-  if (withinStuckBox) {
+  if (stutteringInPlace) {
     springtrap.aiStuckFrames += 1;
   } else {
-    springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
     springtrap.aiStuckFrames = 0;
   }
+  springtrap.aiStuckLastPosition = { x: springtrap.x, y: springtrap.y };
 
-  if (springtrap.aiCommitDirection && springtrap.aiStuckFrames >= aiConfig.stuckFrames) {
+  if (
+    springtrap.aiCommitDirection &&
+    springtrap.aiBlockedCommitFrames >= aiConfig.blockedCommitFrames &&
+    springtrap.aiStuckFrames >= aiConfig.stuckFrames
+  ) {
     return clearSpringtrapCommitAndRestartWindow(springtrap);
   }
 
@@ -2300,8 +2391,7 @@ function chooseSpringtrapRouteMove(
     springtrap.aiState === "search" || (springtrap.aiState === "chase" && !seesLulu);
   if (!shouldCommitRoute) {
     clearSpringtrapCommitDirection(springtrap);
-    springtrap.aiStuckFrames = 0;
-    springtrap.aiStuckAnchor = { x: springtrap.x, y: springtrap.y };
+    resetSpringtrapStuckWindow(springtrap);
     return (
       choosePathDirectionToward(state, springtrap, target, {
         walkGrid,
@@ -2310,7 +2400,12 @@ function chooseSpringtrapRouteMove(
   }
 
   const excludedDirections: Direction[] = [];
+  const allowBackoff = springtrap.aiState !== "chase";
   const tryBackoffMove = (blockedDirection: Direction | null): Direction | null => {
+    if (!allowBackoff) {
+      return null;
+    }
+
     if (!blockedDirection) {
       return null;
     }
@@ -2346,10 +2441,6 @@ function chooseSpringtrapRouteMove(
       springtrap.aiBlockedCommitFrames += 1;
       if (springtrap.aiBlockedCommitFrames >= getSinglePlayerAiConfig().blockedCommitFrames) {
         const blockedDirection = clearSpringtrapCommitAndRestartWindow(springtrap);
-        const backoffMove = tryBackoffMove(blockedDirection);
-        if (backoffMove) {
-          return backoffMove;
-        }
         if (blockedDirection) {
           excludedDirections.push(blockedDirection);
         }
@@ -2403,39 +2494,36 @@ function getSpringtrapAiInput(
   const closeContact = distance(springtrap, state.lulu) <= aiConfig.closeContactRadiusPx;
   const repairCueTarget = getRepairCueTarget(state, springtrap);
   const hasStrongRepairCue = repairCueTarget !== null;
-  const usingWrench = springtrap.wrenchRemainingMs > 0;
+  const itemCueTarget = getSpringtrapItemCueTarget(state, springtrap);
+  const hasStrongItemCue = itemCueTarget !== null;
+  const hasStickyChaseMemory =
+    springtrap.aiState === "chase" &&
+    springtrap.aiLastConfirmedLulu !== null &&
+    springtrap.aiChaseSightLossMs < GAME_CONFIG.vision.chaseMemoryMs;
+  const hasDirectChaseVision = seesLulu || hasStrongRepairCue || hasStrongItemCue || hasStickyChaseMemory;
+  springtrap.aiPriorityChestId = null;
+  const usingWrench = canSpringtrapThrowWrench(springtrap);
   const chooseMove = (target: Vec2 | null): Direction | null => {
-    return chooseSpringtrapRouteMove(state, springtrap, target, deltaMs, seesLulu);
+    return chooseSpringtrapRouteMove(state, springtrap, target, deltaMs, hasDirectChaseVision);
   };
-  const priorityChest = getSpringtrapPriorityChest(state, springtrap);
 
-  if (priorityChest && springtrap.lock.kind === "openingChest") {
-    return {
-      move: null,
-      actionPressed: false,
-      actionHeld: true,
-    };
-  }
-
-  if (priorityChest && springtrap.lock.kind === "none") {
-    if (distance(springtrap, priorityChest) <= GAME_CONFIG.treasure.interactRange) {
-      return {
-        move: null,
-        actionPressed: false,
-        actionHeld: true,
-      };
+  const chaseCueTarget = repairCueTarget ?? itemCueTarget;
+  if (hasStrongRepairCue || hasStrongItemCue) {
+    springtrap.aiPriorityChestId = null;
+    if (springtrap.aiState !== "chase") {
+      enterChase(state, springtrap, chaseCueTarget ?? state.lulu);
+    } else {
+      rememberConfirmedLulu(springtrap, state.lulu, chaseCueTarget ?? state.lulu);
+      springtrap.aiChaseSightLossMs = 0;
     }
 
-    const chestMove = chooseMove(priorityChest);
-    if (chestMove) {
+    if (springtrap.lock.kind === "openingChest") {
       return {
-        move: moveIntentFromDirection(chestMove),
+        move: moveIntentFromDirection(chooseMove(chaseCueTarget ?? state.lulu)),
         actionPressed: false,
         actionHeld: false,
       };
     }
-
-    springtrap.aiPriorityChestId = null;
   }
 
   if (springtrap.lock.kind === "none") {
@@ -2517,8 +2605,8 @@ function getSpringtrapAiInput(
 
   for (let guard = 0; guard < 4; guard += 1) {
     if (springtrap.aiState === "hunt") {
-      if (seesLulu || closeContact || hasStrongRepairCue) {
-        enterChase(state, springtrap, repairCueTarget ?? state.lulu);
+      if (seesLulu || closeContact || hasStrongRepairCue || hasStrongItemCue) {
+        enterChase(state, springtrap, chaseCueTarget ?? state.lulu);
         continue;
       }
 
@@ -2545,8 +2633,8 @@ function getSpringtrapAiInput(
     }
 
     if (springtrap.aiState === "chase") {
-      if (seesLulu || closeContact || hasStrongRepairCue) {
-        rememberConfirmedLulu(springtrap, state.lulu, repairCueTarget ?? state.lulu);
+      if (seesLulu || closeContact || hasStrongRepairCue || hasStrongItemCue) {
+        rememberConfirmedLulu(springtrap, state.lulu, chaseCueTarget ?? state.lulu);
         springtrap.aiChaseSightLossMs = 0;
       } else {
         springtrap.aiChaseSightLossMs += deltaMs;
@@ -2576,8 +2664,8 @@ function getSpringtrapAiInput(
     }
 
     if (springtrap.aiState === "search") {
-      if (seesLulu || closeContact || hasStrongRepairCue) {
-        enterChase(state, springtrap, repairCueTarget ?? state.lulu);
+      if (seesLulu || closeContact || hasStrongRepairCue || hasStrongItemCue) {
+        enterChase(state, springtrap, chaseCueTarget ?? state.lulu);
         continue;
       }
 
@@ -2631,8 +2719,8 @@ function getSpringtrapAiInput(
       };
     }
 
-    if (seesLulu || closeContact || hasStrongRepairCue) {
-      enterChase(state, springtrap, repairCueTarget ?? state.lulu);
+    if (seesLulu || closeContact || hasStrongRepairCue || hasStrongItemCue) {
+      enterChase(state, springtrap, chaseCueTarget ?? state.lulu);
       continue;
     }
 
@@ -2702,7 +2790,8 @@ function canActorMoveWhileLocked(actor: ActorBase): boolean {
   return (
     actor.lock.kind === "attackWindup" ||
     actor.lock.kind === "attackActive" ||
-    actor.lock.kind === "attackRecovery"
+    actor.lock.kind === "attackRecovery" ||
+    (actor.kind === "lulu" && actor.lock.kind === "hitSpin")
   );
 }
 
@@ -2874,6 +2963,17 @@ function getTraverseDuration(actor: ActorBase): number {
   return actor.kind === "springtrap" ? GAME_CONFIG.vault.springtrapMs : GAME_CONFIG.vault.luluMs;
 }
 
+function createTraverseData(actor: ActorBase, destination: Vec2, barrier: LedgeData): TraverseData {
+  return {
+    remainingMs: getTraverseDuration(actor),
+    totalMs: getTraverseDuration(actor),
+    from: { x: actor.x, y: actor.y },
+    to: destination,
+    sourceId: barrier.id,
+    sourceType: "ledge",
+  };
+}
+
 function shouldStartLedgeTraverse(actor: ActorBase, move: Direction, barrier: LedgeData, deltaDistance: number): Vec2 | null {
   if (barrier.orientation === "horizontal" && (move === "up" || move === "down")) {
     const withinX =
@@ -2991,13 +3091,50 @@ function tryStartLedgeTraverse(
 
   actor.lock = {
     kind: "vault",
-    remainingMs: getTraverseDuration(actor),
-    totalMs: getTraverseDuration(actor),
-    from: { x: actor.x, y: actor.y },
-    to: clampedDestination,
-    sourceId: barrier.id,
-    sourceType: "ledge",
+    ...createTraverseData(actor, clampedDestination, barrier),
   };
+  return true;
+}
+
+function tryAttachLedgeTraverseToAttackLock(
+  state: MatchState,
+  actor: ActorBase,
+  move: Direction,
+  barrier: LedgeData,
+  deltaDistance: number,
+): boolean {
+  if (
+    actor.kind !== "springtrap" ||
+    !(
+      actor.lock.kind === "attackWindup" ||
+      actor.lock.kind === "attackActive" ||
+      actor.lock.kind === "attackRecovery"
+    ) ||
+    actor.lock.traverse
+  ) {
+    return false;
+  }
+
+  const destination = shouldStartLedgeTraverse(actor, move, barrier, deltaDistance);
+  if (!destination) {
+    return false;
+  }
+
+  const map = getMap(state);
+  const worldWidth = map.widthTiles * TILE_SIZE;
+  const worldHeight = map.heightTiles * TILE_SIZE;
+  const clampedDestination = clampActorPosition(actor, destination, worldWidth, worldHeight);
+  if (
+    Math.abs(clampedDestination.x - actor.x) < 0.01 &&
+    Math.abs(clampedDestination.y - actor.y) < 0.01
+  ) {
+    return false;
+  }
+  if (!isTraverseDestinationClear(state, actor, clampedDestination)) {
+    return false;
+  }
+
+  actor.lock.traverse = createTraverseData(actor, clampedDestination, barrier);
   return true;
 }
 
@@ -3011,6 +3148,7 @@ function moveActor(
   updateFacing(actor, move);
 
   const manualVaultPressed = options.manualVaultPressed ?? false;
+  const combineManualVaultAttack = options.combineManualVaultAttack ?? false;
   const effectiveMove = isMoveIntentActive(move) ? move : manualVaultPressed ? moveIntentFromDirection(actor.facing) : null;
   if (!isMoveIntentActive(effectiveMove) || (actor.lock.kind !== "none" && !canActorMoveWhileLocked(actor))) {
     return;
@@ -3029,6 +3167,14 @@ function moveActor(
 
   for (const ledgeMove of getMoveIntentDirections(effectiveMove)) {
     const approachedLedge = getBestApproachLedge(state, actor, ledgeMove);
+    if (
+      approachedLedge &&
+      manualVaultPressed &&
+      combineManualVaultAttack &&
+      tryAttachLedgeTraverseToAttackLock(state, actor, ledgeMove, approachedLedge, delta)
+    ) {
+      return;
+    }
     if (
       approachedLedge &&
       (allowAutoVault || manualVaultPressed) &&
@@ -3275,6 +3421,13 @@ function createProjectile(
   };
 }
 
+function startSpringtrapWrenchCooldown(springtrap: SpringtrapState): void {
+  springtrap.wrenchCooldownRemainingMs = Math.min(
+    Math.max(0, springtrap.wrenchRemainingMs),
+    GAME_CONFIG.boosts.wrenchCooldownMs,
+  );
+}
+
 function grantChestReward(state: MatchState, opener: ActorBase): ChestReward {
   if (opener.kind === "lulu") {
     const reward: ChestReward = Math.random() >= 0.5 ? "armor" : "flashlight";
@@ -3293,7 +3446,18 @@ function grantChestReward(state: MatchState, opener: ActorBase): ChestReward {
     springtrap.heartCharmRemainingMs = GAME_CONFIG.boosts.heartCharmDurationMs;
   } else {
     springtrap.wrenchRemainingMs = GAME_CONFIG.boosts.wrenchDurationMs;
+    springtrap.wrenchCooldownRemainingMs = 0;
   }
+
+  if (state.mode === "single") {
+    const repairCueTarget = getRepairCueTarget(state, springtrap);
+    const seesLulu = canSeePoint(springtrap, state.lulu, getVisionRadius("springtrap"), getMap(state).obstacles);
+    const closeContact = distance(springtrap, state.lulu) <= getSinglePlayerAiConfig().closeContactRadiusPx;
+    if (repairCueTarget || seesLulu || closeContact) {
+      enterChase(state, springtrap, repairCueTarget ?? state.lulu);
+    }
+  }
+
   return reward;
 }
 
@@ -3347,6 +3511,7 @@ function finishChestOpen(state: MatchState, actor: ActorBase, chestId: string): 
 
 function applyAttackHit(state: MatchState, killer: SpringtrapState, attackMode: "melee" | "projectile"): void {
   if (attackMode === "projectile") {
+    startSpringtrapWrenchCooldown(killer);
     state.projectiles.push(createProjectile(state, killer, getAttackLockFacing(killer) ?? killer.facing));
     return;
   }
@@ -3603,6 +3768,39 @@ function getSpringtrapPalletKnockbackDestination(state: MatchState, springtrap: 
   return { x: probe.x, y: probe.y };
 }
 
+function updateTraversePosition(
+  state: MatchState,
+  actor: ActorBase,
+  traverse: TraverseData,
+  deltaMs: number,
+): TraverseData | null {
+  const map = getMap(state);
+  const worldWidth = map.widthTiles * TILE_SIZE;
+  const worldHeight = map.heightTiles * TILE_SIZE;
+  const nextRemaining = traverse.remainingMs - deltaMs;
+  const progress = clamp((traverse.totalMs - Math.max(nextRemaining, 0)) / traverse.totalMs, 0, 1);
+  const nextPosition = clampActorPosition(
+    actor,
+    {
+      x: traverse.from.x + (traverse.to.x - traverse.from.x) * progress,
+      y: traverse.from.y + (traverse.to.y - traverse.from.y) * progress,
+    },
+    worldWidth,
+    worldHeight,
+  );
+  actor.x = nextPosition.x;
+  actor.y = nextPosition.y;
+
+  if (nextRemaining <= 0) {
+    return null;
+  }
+
+  return {
+    ...traverse,
+    remainingMs: nextRemaining,
+  };
+}
+
 function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number): void {
   if (actor.lock.kind === "none") {
     return;
@@ -3665,6 +3863,7 @@ function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number):
   }
 
   if (actor.lock.kind === "attackWindup") {
+    const nextTraverse = actor.lock.traverse ? updateTraversePosition(state, actor, actor.lock.traverse, deltaMs) : null;
     actor.lock.remainingMs -= deltaMs;
     if (actor.lock.remainingMs <= 0) {
       actor.lock = {
@@ -3673,12 +3872,16 @@ function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number):
         hitApplied: false,
         facing: actor.lock.facing,
         attackMode: actor.lock.attackMode,
+        traverse: nextTraverse,
       };
+    } else {
+      actor.lock.traverse = nextTraverse;
     }
     return;
   }
 
   if (actor.lock.kind === "attackActive") {
+    const nextTraverse = actor.lock.traverse ? updateTraversePosition(state, actor, actor.lock.traverse, deltaMs) : null;
     const attackMode = actor.lock.attackMode;
     if (!actor.lock.hitApplied && actor.kind === "springtrap") {
       applyAttackHit(state, actor as SpringtrapState, attackMode);
@@ -3690,15 +3893,20 @@ function updateLockTimers(state: MatchState, actor: ActorBase, deltaMs: number):
 
     actor.lock.remainingMs -= deltaMs;
     if (actor.lock.remainingMs <= 0) {
-      actor.lock = { kind: "none" };
+      actor.lock = nextTraverse ? { kind: "vault", ...nextTraverse } : { kind: "none" };
+    } else {
+      actor.lock.traverse = nextTraverse;
     }
     return;
   }
 
   if (actor.lock.kind === "attackRecovery") {
+    const nextTraverse = actor.lock.traverse ? updateTraversePosition(state, actor, actor.lock.traverse, deltaMs) : null;
     actor.lock.remainingMs -= deltaMs;
     if (actor.lock.remainingMs <= 0) {
-      actor.lock = { kind: "none" };
+      actor.lock = nextTraverse ? { kind: "vault", ...nextTraverse } : { kind: "none" };
+    } else {
+      actor.lock.traverse = nextTraverse;
     }
     return;
   }
@@ -3867,7 +4075,15 @@ function updateSpringtrapChestOpening(
   state: MatchState,
   springtrap: SpringtrapState,
   input: MatchControls["springtrap"] | null | undefined,
+  isHumanControlled: boolean,
 ): void {
+  if (!isHumanControlled) {
+    if (springtrap.lock.kind === "openingChest") {
+      cancelChestOpening(state, springtrap);
+    }
+    return;
+  }
+
   if (springtrap.lock.kind !== "openingChest") {
     if (
       springtrap.lock.kind !== "none" ||
@@ -3931,7 +4147,8 @@ function tryStartSpringtrapAction(springtrap: SpringtrapState, actionPressed: bo
     kind: "attackWindup",
     remainingMs: GAME_CONFIG.attack.windupMs,
     facing: springtrap.facing,
-    attackMode: springtrap.wrenchRemainingMs > 0 ? "projectile" : "melee",
+    attackMode: canSpringtrapThrowWrench(springtrap) ? "projectile" : "melee",
+    traverse: null,
   };
 }
 
@@ -3954,26 +4171,32 @@ function applyFlashBlind(state: MatchState, springtrap: SpringtrapState): void {
   };
 }
 
-function updateGeneratorRepairs(state: MatchState, controls: MatchControls, deltaMs: number): void {
+function updateLuluRepairCue(state: MatchState, controls: MatchControls): void {
   state.luluRepairingGeneratorId = null;
-  const palletOpportunity = findNearbyUprightPallet(state);
-  const healerOpportunity = findNearbyHealerNpc(state);
-  const chestOpportunity = findNearbyOpenableChest(state, state.lulu);
 
   if (
-    state.lulu.health !== "dead" &&
-    state.lulu.health !== "escaped" &&
-    state.lulu.lock.kind === "none" &&
-    controls.lulu.actionHeld &&
-    !isMoveIntentActive(controls.lulu.move) &&
-    !palletOpportunity &&
-    !healerOpportunity &&
-    !chestOpportunity
+    state.lulu.health === "dead" ||
+    state.lulu.health === "escaped" ||
+    state.lulu.lock.kind !== "none" ||
+    !controls.lulu.actionHeld ||
+    isMoveIntentActive(controls.lulu.move)
   ) {
+    return;
+  }
+
+  const generator = findNearbyRepairableGenerator(state, state.lulu);
+  if (generator) {
+    state.luluRepairingGeneratorId = generator.id;
+  }
+}
+
+function updateGeneratorRepairs(state: MatchState, controls: MatchControls, deltaMs: number): void {
+  updateLuluRepairCue(state, controls);
+
+  if (state.luluRepairingGeneratorId) {
     const generator = findNearbyRepairableGenerator(state, state.lulu);
     if (generator) {
       repairGenerator(generator, deltaMs);
-      state.luluRepairingGeneratorId = generator.id;
     }
   }
 
@@ -4034,6 +4257,13 @@ function updateBoosts(state: MatchState, deltaMs: number): void {
     springtrap.heartCharmRemainingMs = Math.max(0, springtrap.heartCharmRemainingMs - deltaMs);
     springtrap.heartCharmCooldownRemainingMs = Math.max(0, springtrap.heartCharmCooldownRemainingMs - deltaMs);
     springtrap.wrenchRemainingMs = Math.max(0, springtrap.wrenchRemainingMs - deltaMs);
+    springtrap.wrenchCooldownRemainingMs = Math.max(0, springtrap.wrenchCooldownRemainingMs - deltaMs);
+    if (state.mode === "single") {
+      updateSpringtrapAiItemCycle(springtrap, deltaMs);
+    }
+    if (springtrap.wrenchRemainingMs <= 0) {
+      springtrap.wrenchCooldownRemainingMs = 0;
+    }
   }
 
   if (state.lulu.flashlightRemainingMs > 0 && state.lulu.flashlightCooldownRemainingMs <= 0) {
@@ -4193,6 +4423,7 @@ export function stepMatch(state: MatchState, controls: MatchControls, deltaMs: n
   updateTreasureChests(state, deltaMs);
   updateNpcDissolves(state, deltaMs);
   updateBoosts(state, deltaMs);
+  updateLuluRepairCue(state, controls);
 
   if (state.result !== "running") {
     return;
@@ -4231,18 +4462,27 @@ export function stepMatch(state: MatchState, controls: MatchControls, deltaMs: n
       input?.actionPressed ?? false,
     );
   });
+  const springtrapWillAttackVault = state.springtraps.map(
+    (_, index) => state.mode === "multiplayer" && index === 0 && primaryUsesHumanControls && springtrapWillManualVault[index],
+  );
 
   tryStartLuluAction(state, controls.lulu.actionPressed && !luluWillManualVault);
   updateHealing(state, controls);
   updateLuluChestOpening(state, controls);
   state.springtrapOpeningChestId = null;
   for (let index = 0; index < state.springtraps.length; index += 1) {
-    updateSpringtrapChestOpening(state, state.springtraps[index], effectiveSpringtrapControls[index]);
+    updateSpringtrapChestOpening(
+      state,
+      state.springtraps[index],
+      effectiveSpringtrapControls[index],
+      index === 0 && primaryUsesHumanControls,
+    );
   }
   for (let index = 0; index < state.springtraps.length; index += 1) {
     tryStartSpringtrapAction(
       state.springtraps[index],
-      (effectiveSpringtrapControls[index]?.actionPressed ?? false) && !springtrapWillManualVault[index],
+      (effectiveSpringtrapControls[index]?.actionPressed ?? false) &&
+        (!springtrapWillManualVault[index] || springtrapWillAttackVault[index]),
     );
   }
   moveActor(state, state.lulu, controls.lulu.move, deltaMs, {
@@ -4255,12 +4495,13 @@ export function stepMatch(state: MatchState, controls: MatchControls, deltaMs: n
       state.springtraps[index],
       effectiveSpringtrapControls[index]?.move ?? null,
       deltaMs,
-      index === 0 && primaryUsesHumanControls
-        ? {
+        index === 0 && primaryUsesHumanControls
+          ? {
             allowAutoVault: false,
             manualVaultPressed: springtrapWillManualVault[index],
+            combineManualVaultAttack: springtrapWillAttackVault[index],
           }
-        : undefined,
+          : undefined,
     );
   }
   for (const npc of state.npcs) {
